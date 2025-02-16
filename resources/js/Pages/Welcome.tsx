@@ -52,7 +52,7 @@ export default function Welcome({
                 setFormattedAmount('');
                 setData('category_id', undefined);
                 console.log(response);
-                toast.success(String(response.props?.message) || 'Gasto guardado exitosamente');
+                toast.success('Gasto guardado exitosamente');
             },
             onError: (err) => {
                 console.error('Error al guardar el gasto', err);
