@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProfileController;
+use App\Models\Category;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -11,6 +14,7 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'categories' => Category::all()
     ]);
 });
 
@@ -22,6 +26,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::resource('expenses', ExpenseController::class);
+    Route::resource('categories', CategoryController::class);
 });
 
-require __DIR__.'/auth.php';
+Route::prefix('api')->group(function () {
+    Route::post('/transactions', [ExpenseController::class, 'store'])->name('expense.public-store');
+});
+
+require __DIR__ . '/auth.php';
