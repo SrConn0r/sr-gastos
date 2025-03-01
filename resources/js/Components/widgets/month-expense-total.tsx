@@ -51,12 +51,12 @@ export default function MonthExpenseTotal({
             <AccordionItem value="month-expense-total" className="bg-background rounded-xl p-4 shadow-sm">
                 <AccordionTrigger className="py-0 border-b-1 border-gray-600">Total de Gastos del Mes: <span className="font-normal ml-auto">{formatCurrencyInput(monthExpenseTotal.toString()).formatted}</span></AccordionTrigger>
                 <AccordionContent className="py-4">
-                    <div className="space-y-2">
+                    <div className="space-y-4">
                         <h3 className="text-sm font-semibold">Desglose por categoría:</h3>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                             {monthExpenseTotalByCategory.map((category) => (
                                 <div key={category.id} className="flex justify-between items-center text-sm">
-                                    <span>{category.name}</span>
+                                    <span className="capitalize underline">{category.name}</span>
                                     <span>{formatCurrencyInput(category.total.toString()).formatted}</span>
                                 </div>
                             ))}

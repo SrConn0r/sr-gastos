@@ -105,7 +105,7 @@ export function ExpenseDialog({ categories, expense, onClose }: ExpenseDialogPro
                         }
                     </DrawerDescription>
                 </DrawerHeader>
-                <div className="px-4 pb-4 overflow-auto">
+                <div className="px-4 pb-0 overflow-auto">
                     <ExpenseForm 
                         categories={categories} 
                         onClose={handleClose} 

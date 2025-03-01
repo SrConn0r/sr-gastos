@@ -42,7 +42,7 @@ export default function Login({
 
             <div className='flex flex-col items-center justify-center h-screen w-full p-8 md:px-16'>
                 <Link href='/'>
-                    <Button variant="outline" className='absolute top-4 left-4'>
+                    <Button variant="outline" className='absolute top-4 left-4 py-2'>
                         <ChevronLeft /> Regresar
                     </Button>
                 </Link>

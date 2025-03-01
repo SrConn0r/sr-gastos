@@ -149,9 +149,9 @@ export function DataTable<TData, TValue>({
 
     return (
         <>
-            <div className="flex flex-col sm:flex-row items-center py-4 gap-4 w-full">
+            <div className="flex flex-col sm:flex-row items-center py-4 sm:gap-4 gap-2 w-full">
                 <Input
-                    placeholder="Search"
+                    placeholder="Buscar"
                     value={globalFilter ?? ""}
                     onChange={(event) => setGlobalFilter(String(event.target.value))}
                     className="w-full sm:max-w-lg"
@@ -185,7 +185,7 @@ export function DataTable<TData, TValue>({
 
                 </div>
                 {changeLayout && (
-                    <div className="hidden md:flex gap-4">
+                    <div className="hidden md:flex sm:gap-4 gap-2">
                         <Button
                             onClick={() => {
                                 setIsGridView(false);
@@ -211,10 +211,10 @@ export function DataTable<TData, TValue>({
                         table.resetColumnFilters();
                         table.resetGlobalFilter();
                     }}
-                    className="w-full sm:w-auto sm:ml-auto"
+                    className="w-full sm:w-auto sm:ml-auto py-2"
                 >
                     <FilterX />
-                    Clear Filters
+                    Limpiar Filtros
                 </Button>
             </div>
             {isGridView ? (
@@ -230,7 +230,7 @@ export function DataTable<TData, TValue>({
                             {table.getRowModel().rows.map((row) => (
                                 <div
                                     key={row.id}
-                                    className="bg-card text-card-foreground rounded-lg shadow-md p-4"
+                                    className="bg-card text-card-foreground rounded-lg shadow-md py-4 px-6 space-y-4"
                                 >
                                     {row.getVisibleCells().map((cell) => {
                                         let header: any;
@@ -242,12 +242,16 @@ export function DataTable<TData, TValue>({
                                             });
                                         });
                                         return (
-                                            <div key={cell.id} className="mb-2">
-                                                <strong className="capitalize">{cell.column.columnDef.header ? header : cell.column.id}: </strong>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
+                                            <div key={cell.id} className="gap-2 flex items-center">
+                                                <strong className="capitalize text-center">
+                                                    {cell.column.columnDef.header ? header : cell.column.id}:
+                                                </strong>
+                                                <span className="flex-1 text-right justify-end">
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </span>
                                             </div>
                                         )
                                     })}

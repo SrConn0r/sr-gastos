@@ -22,7 +22,7 @@ export default function Welcome({
                     <img src="assets/images/sr-connor.svg" alt="Logo" width={180} />
                     <div>
                         <Link href='/login'>
-                            <Button variant="outline">
+                            <Button variant="outline" className='py-2'>
                                 Login <LogIn />
                             </Button>
                         </Link>

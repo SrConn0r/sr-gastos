@@ -97,7 +97,7 @@ export default function Dashboard({
                 centered: true,
             },
             cell: ({ row }) => {
-                return <div className='flex gap-2 justify-center'>
+                return <div className='flex gap-2 sm:justify-center justify-end'>
                     <Button
                         variant="outline"
                         size="icon"

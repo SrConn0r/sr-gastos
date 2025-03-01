@@ -27,6 +27,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { router } from "@inertiajs/react";
 import { toast } from "sonner";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
+import { formatCurrencyInput } from "@/lib/utils";
 
 interface CategoryDialogProps {
     categories: Category[];
@@ -87,7 +88,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
             cell: ({ row }) => {
                 return (
                     row.original.budget
-                        ? (row.original.budget)
+                        ? <span className="text-right">{formatCurrencyInput(row.original.budget.toString()).formatted}</span>
                         : 'Sin presupuesto'
                 );
             }
@@ -99,7 +100,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
             },
             cell: ({ row }) => {
                 return (
-                    <div className="flex gap-2 justify-center">
+                    <div className="flex gap-2 sm:justify-center justify-end">
                         <Button
                             variant="outline"
                             size="icon"
@@ -133,6 +134,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
             }
         }
     ];
+
     if (isDesktop) {
         return (
             <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -184,7 +186,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
                         }
                     </DrawerDescription>
                 </DrawerHeader>
-                <div className="px-4 pb-4 overflow-auto">
+                <div className="px-4 pb-0 overflow-auto">
                     <CategoryForm
                         onClose={handleClose}
                         category={currentCategory}
