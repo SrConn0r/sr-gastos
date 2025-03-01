@@ -1,0 +1,1 @@
+import{j as s}from"./app-fYvrjduN.js";import{a3 as r}from"./popover-D1eCeAYO.js";function m({children:e}){return s.jsxs("div",{className:"flex min-h-screen flex-col items-center bg-gray-100 sm:justify-center sm:pt-0 dark:bg-gray-900",children:[s.jsx(r,{}),e]})}export{m as G};
