@@ -232,15 +232,25 @@ export function DataTable<TData, TValue>({
                                     key={row.id}
                                     className="bg-card text-card-foreground rounded-lg shadow-md p-4"
                                 >
-                                    {row.getVisibleCells().map((cell) => (
-                                        <div key={cell.id} className="mb-2">
-                                            <strong className="capitalize">{cell.column.id}: </strong>
-                                            {flexRender(
-                                                cell.column.columnDef.cell,
-                                                cell.getContext()
-                                            )}
-                                        </div>
-                                    ))}
+                                    {row.getVisibleCells().map((cell) => {
+                                        let header: any;
+                                        table.getHeaderGroups().map((headerGroup) => {
+                                            headerGroup.headers.forEach((h) => {
+                                                if (h.id === cell.column.id) {
+                                                    header = h.column.columnDef.header;
+                                                }
+                                            });
+                                        });
+                                        return (
+                                            <div key={cell.id} className="mb-2">
+                                                <strong className="capitalize">{cell.column.columnDef.header ? header : cell.column.id}: </strong>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             ))}
                         </div>
