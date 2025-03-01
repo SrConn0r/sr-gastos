@@ -21,7 +21,7 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     // Obtener todos los gastos con sus categorías
-    $expenses = Expense::with('category')->get();
+    $expenses = Expense::with('category')->get()->sortByDesc('expense_date');
     
     // Obtener todas las categorías
     $categories = Category::all();
