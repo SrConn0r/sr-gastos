@@ -33,9 +33,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/Components/ui/table";
-import React from "react";
+import React, { useEffect } from "react";
 import { Input } from "./input";
 import { DataTablePagination } from "./data-table-pagination";
+
 import {
     Select,
     SelectContent,
@@ -46,12 +47,15 @@ import {
     SelectValue,
 } from "./select";
 import { Button } from "./button";
-import { FilterX, Heart } from "lucide-react";
+import { FilterX, LayoutGrid, List } from "lucide-react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
     columnSelectFilter?: ColumnSelectFilter | ColumnSelectFilter[];
+    changeLayout?: boolean;
+    children?: (rowData: TData) => React.ReactNode;
 }
 
 interface SelectData {
@@ -80,6 +84,7 @@ function Filter({
     return filterVariant === "select" ? (
         <Select
             onValueChange={(value) => {
+                console.log(value);
                 column.setFilterValue(value);
             }}
             value={(columnFilterValue ?? "") as string}
@@ -104,6 +109,8 @@ export function DataTable<TData, TValue>({
     columns,
     data,
     columnSelectFilter,
+    changeLayout = false,
+    children,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -111,6 +118,14 @@ export function DataTable<TData, TValue>({
     );
     const [globalFilter, setGlobalFilter] = React.useState("");
     const [rowSelection, setRowSelection] = React.useState({});
+    const [isGridView, setIsGridView] = React.useState(false);
+
+    const isMobile = useMediaQuery("(max-width: 767px)");
+
+    useEffect(() => {
+        setIsGridView(isMobile);
+    }, [isMobile])
+
 
     const table = useReactTable({
         data,
@@ -167,10 +182,31 @@ export function DataTable<TData, TValue>({
                                 placeholder={filter.placeholder ?? ""}
                             />
                         ))}
+
                 </div>
+                {changeLayout && (
+                    <div className="hidden md:flex gap-4">
+                        <Button
+                            onClick={() => {
+                                setIsGridView(false);
+                            }}
+                            variant={isGridView ? "outline" : "secondary"}
+                        >
+                            <List />
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setIsGridView(true);
+                            }}
+                            variant={isGridView ? "secondary" : "outline"}
+                        >
+                            <LayoutGrid />
+                        </Button>
+                    </div>
+                )}
 
                 <Button
-                    variant="outline"
+                    variant="secondary"
                     onClick={() => {
                         table.resetColumnFilters();
                         table.resetGlobalFilter();
@@ -178,80 +214,110 @@ export function DataTable<TData, TValue>({
                     className="w-full sm:w-auto sm:ml-auto"
                 >
                     <FilterX />
-                    Limpiar Filtros
+                    Clear Filters
                 </Button>
             </div>
-
-            <div className="rounded-md border shadow border-slate-200 overflow-hidden">
-                <Table>
-                    {/* Header */}
-                    <TableHeader>
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="bg-white">
-                                {headerGroup.headers.map((header) => {
-                                    const isCentered = header.column.columnDef.meta?.centered;
-
-                                    return (
-                                        <TableHead
-                                            key={header.id}
-                                            className={`${isCentered ? "text-center" : "text-left"
-                                                } border border-slate-200 font-semibold text-slate-900`}
-                                        >
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </TableHead>
-                                    );
-                                })}
-                            </TableRow>
-                        ))}
-                    </TableHeader>
-
-                    {/* Body */}
-                    <TableBody className="overflow-auto">
-                        {table.getRowModel().rows?.length ? (
-                            table.getRowModel().rows.map((row, rowIndex) => (
-                                <TableRow
+            {isGridView ? (
+                <>
+                    {children ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {table.getRowModel().rows.map((row) => (
+                                <div key={row.id}>{children(row.original)}</div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {table.getRowModel().rows.map((row) => (
+                                <div
                                     key={row.id}
-                                    data-state={row.getIsSelected() && "selected"}
-                                    className={`${rowIndex % 2 === 0 ? "bg-white" : "bg-slate-100"
-                                        }`}
+                                    className="bg-card text-card-foreground rounded-lg shadow-md p-4"
                                 >
-                                    {row.getVisibleCells().map((cell, index) => {
-                                        const isCentered = cell.column.columnDef.meta?.centered;
+                                    {row.getVisibleCells().map((cell) => (
+                                        <div key={cell.id} className="mb-2">
+                                            <strong className="capitalize">{cell.column.id}: </strong>
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="rounded-md border shadow-md border-slate-200 overflow-hidden">
+                    <Table>
+                        {/* Header */}
+                        <TableHeader>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id} className="bg-white">
+                                    {headerGroup.headers.map((header) => {
+                                        const isCentered = header.column.columnDef.meta?.centered;
 
                                         return (
-                                            <TableCell
-                                                key={cell.id}
-                                                className={`border border-slate-200 ${isCentered ? "text-center" : "text-left"
-                                                    }`}
-                                                width={cell.column.columnDef.meta?.size}
+                                            <TableHead
+                                                key={header.id}
+                                                className={`${isCentered ? "text-center" : "text-left"
+                                                    } border border-slate-200 font-semibold text-slate-900`}
                                             >
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
-                                                )}
-                                            </TableCell>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableHead>
                                         );
                                     })}
                                 </TableRow>
-                            ))
-                        ) : (
-                            <TableRow>
-                                <TableCell
-                                    colSpan={columns.length}
-                                    className="h-24 text-center border border-slate-200"
-                                >
-                                    No results.
-                                </TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+                            ))}
+                        </TableHeader>
+
+                        {/* Body */}
+                        <TableBody className="overflow-auto">
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row, rowIndex) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                        className={`${rowIndex % 2 === 0 ? "bg-white" : "bg-slate-100"
+                                            }`}
+                                    >
+                                        {row.getVisibleCells().map((cell, index) => {
+                                            const isCentered = cell.column.columnDef.meta?.centered;
+
+                                            return (
+                                                <TableCell
+                                                    key={cell.id}
+                                                    className={`border border-slate-200 ${isCentered ? "text-center" : "text-left"
+                                                        }`}
+                                                    width={cell.column.columnDef.meta?.size}
+                                                >
+                                                    {flexRender(
+                                                        cell.column.columnDef.cell,
+                                                        cell.getContext()
+                                                    )}
+                                                </TableCell>
+                                            );
+                                        })}
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center border border-slate-200"
+                                    >
+                                        No results.
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            )}
             <div className="p-4">
                 <DataTablePagination table={table} />
             </div>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 
 class ExpenseController extends Controller
 {
@@ -16,9 +17,11 @@ class ExpenseController extends Controller
     public function index()
     {
         $expenses = Expense::where('user_id', Auth::id())->get()->sort('expense_date')->paginate(15);
+        $categories = Category::all();
 
-        return Inertia::render('Expenses/Index', [
-            'expenses' => $expenses
+        return Inertia::render('Dashboard', [
+            'expenses' => $expenses,
+            'categories' => $categories
         ]);
     }
 
@@ -36,23 +39,22 @@ class ExpenseController extends Controller
         Expense::create([
             'title' => $validated['title'],
             'amount' => $validated['amount'],
-            'expense_date' => date('Y-m-d', strtotime($validated['expense_date'])),
-            'category_id' => $validated['category_id']
+            'expense_date' => $validated['expense_date'],
+            'category_id' => $validated['category_id'],
+            'user_id' => Auth::id()
         ]);
 
-        return back()->with([
-            'message' => 'Transacción agregada exitosamente!',
-        ], 201);
+        return Redirect::back()->with('message', 'Transacción agregada exitosamente!');
     }
 
     public function update(Request $request, Expense $expense)
     {
-        $this->authorize('update', $expense);
+        // $this->authorize('update', $expense);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
-            'expense_date' => 'required|date|before_or_equal:today',
+            'expense_date' => 'required|date',
             'category_id' => 'required|exists:categories,id'
         ]);
 
@@ -60,15 +62,15 @@ class ExpenseController extends Controller
 
         $expense->update($validated);
 
-        return redirect()->back();
+        return Redirect::back();
     }
 
     public function destroy(Expense $expense)
     {
-        $this->authorize('delete', $expense);
+        // $this->authorize('delete', $expense);
 
         $expense->delete();
 
-        return redirect()->back();
+        return Redirect::back();
     }
 }

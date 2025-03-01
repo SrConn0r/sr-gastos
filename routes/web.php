@@ -21,7 +21,8 @@ Route::get('/', function () {
 
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard', [
-        'expenses' => Expense::with('category')->get()
+        'expenses' => Expense::with('category')->get(),
+        'categories' => Category::all()
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -31,7 +32,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('expenses', ExpenseController::class);
+    Route::put('/expenses/{expense}', [ExpenseController::class, 'update'])->name('expense.update');
+    Route::delete('/expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expense.destroy');
     Route::resource('categories', CategoryController::class);
+    Route::put('/categories/{category}', [CategoryController::class, 'update'])->name('category.update');
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy'])->name('category.destroy');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('category.store');
 });
 
 Route::prefix('api')->group(function () {
