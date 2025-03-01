@@ -64,7 +64,7 @@ export function ExpenseDialog({ categories, expense, onClose }: ExpenseDialogPro
         return (
             <Dialog open={open} onOpenChange={handleOpenChange}>
                 <DialogTrigger asChild>
-                    <Button className="md:mb-4 w-full md:w-fit " onClick={handleAddNew}>
+                    <Button className="w-full md:w-fit " onClick={handleAddNew}>
                         <Plus className="mr-2 h-4 w-4" /> Agregar Gasto
                     </Button>
                 </DialogTrigger>
@@ -91,7 +91,7 @@ export function ExpenseDialog({ categories, expense, onClose }: ExpenseDialogPro
     return (
         <Drawer open={open} onOpenChange={handleOpenChange}>
             <DrawerTrigger asChild>
-                <Button className="mb-4" onClick={handleAddNew}>
+                <Button onClick={handleAddNew}>
                     <Plus className="mr-2 h-4 w-4" /> Agregar Gasto
                 </Button>
             </DrawerTrigger>

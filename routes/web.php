@@ -20,9 +20,38 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
+    // Obtener todos los gastos con sus categorías
+    $expenses = Expense::with('category')->get();
+    
+    // Obtener todas las categorías
+    $categories = Category::all();
+    
+    // Calcular el total de gastos del mes actual
+    $monthExpenseTotal = Expense::whereMonth('expense_date', now()->month)->sum('amount');
+    
+    // Obtener los gastos del mes actual agrupados por categoría
+    $expensesByCategory = Expense::whereMonth('expense_date', now()->month)
+        ->with('category')
+        ->get()
+        ->groupBy('category_id');
+    
+    // Calcular el total por cada categoría
+    $monthExpenseTotalByCategory = [];
+    foreach ($expensesByCategory as $categoryId => $categoryExpenses) {
+        $category = Category::find($categoryId);
+        $monthExpenseTotalByCategory[] = [
+            'id' => $categoryId,
+            'name' => $category->name,
+            'total' => $categoryExpenses->sum('amount')
+        ];
+    }
+    
     return Inertia::render('Dashboard', [
-        'expenses' => Expense::with('category')->get(),
-        'categories' => Category::all()
+        'expenses' => $expenses,
+        'categories' => $categories,
+        'monthExpenseTotal' => $monthExpenseTotal,
+        'monthExpenseTotalCategories' => $expensesByCategory,
+        'monthExpenseTotalByCategory' => $monthExpenseTotalByCategory
     ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 

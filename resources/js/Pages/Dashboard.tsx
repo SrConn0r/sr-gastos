@@ -7,13 +7,34 @@ import { Expense } from '@/types/expense';
 import { Head, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Category } from '@/types/category';
-import { Edit, Trash } from 'lucide-react';
+import { Edit, Loader2, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { formatDateString } from '@/lib/utils';
 import { CategoryDialog } from '@/Components/category-dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import MonthExpenseTotal from '@/Components/widgets/month-expense-total';
 
-export default function Dashboard({ expenses, categories }: PageProps<{ expenses: Expense[], categories: Category[] }>) {
+// Definir la interfaz para el total de gastos por categoría
+interface CategoryTotal {
+    id: number;
+    name: string;
+    total: number;
+}
+
+export default function Dashboard({ 
+    expenses, 
+    categories, 
+    monthExpenseTotal, 
+    monthExpenseTotalCategories,
+    monthExpenseTotalByCategory 
+}: PageProps<{ 
+    expenses: Expense[], 
+    categories: Category[], 
+    monthExpenseTotal: number, 
+    monthExpenseTotalCategories: Expense[],
+    monthExpenseTotalByCategory: CategoryTotal[]
+}>) {
     const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(undefined);
     const [isDeleting, setIsDeleting] = useState(false);
 
@@ -83,13 +104,25 @@ export default function Dashboard({ expenses, categories }: PageProps<{ expenses
                         onClick={() => setSelectedExpense(row.original)}>
                         <Edit className='w-4 h-4' />
                     </Button>
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        disabled={isDeleting}
-                        onClick={() => handleDelete(row.original)}>
-                        <Trash className='w-4 h-4' />
-                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="icon">
+                                <Trash className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Esta acción no se puede deshacer. Esto eliminará permanentemente el gasto y sus datos.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction className="bg-destructive" onClick={() => handleDelete(row.original)}>Eliminar</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                 </div>
             }
         }
@@ -109,9 +142,9 @@ export default function Dashboard({ expenses, categories }: PageProps<{ expenses
         >
             <Head title="Inicio" />
 
-            <div className="py-12">
-                <div className="mx-auto px-6 max-w-7xl sm:px-6 lg:px-8">
-                    <div className="flex gap-2 md:gap-4 w-full md:flex-row flex-col">
+            <div className="py-6 md:py-12">
+                <div className="mx-auto px-2 max-w-7xl sm:px-6 lg:px-8">
+                    <div className="flex gap-4 md:gap-4 w-full md:flex-row flex-col md:items-center mb-4">
                         <ExpenseDialog
                             expense={selectedExpense}
                             categories={categories}
@@ -119,10 +152,23 @@ export default function Dashboard({ expenses, categories }: PageProps<{ expenses
                         <CategoryDialog
                             categories={categories}
                             onClose={handleClose} />
+                        <div className="md:ml-auto">
+                            <MonthExpenseTotal
+                                monthExpenseTotal={monthExpenseTotal}
+                                monthExpenseTotalCategories={monthExpenseTotalCategories}
+                                monthExpenseTotalByCategory={monthExpenseTotalByCategory}
+                            />
+                        </div>
                     </div>
                     <Card className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
-                            <DataTable columns={columns} data={expenses} />
+                            {
+                                isDeleting
+                                    ? <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                                        <Loader2 className="h-10 w-10 animate-spin" />
+                                    </div>
+                                    : <DataTable columns={columns} data={expenses} />
+                            }
                         </div>
                     </Card>
                 </div>

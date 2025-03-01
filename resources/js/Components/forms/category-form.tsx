@@ -1,11 +1,8 @@
 import InputError from '@/Components/InputError';
-import { Button, Calendar, Input, Label, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/Components/ui';
-import { cn, formatCurrencyInput } from '@/lib/utils';
+import { Button, Input, Label } from '@/Components/ui';
+import { formatCurrencyInput } from '@/lib/utils';
 import { Category } from '@/types/category';
-import { Expense } from '@/types/expense';
 import { useForm } from '@inertiajs/react';
-import { format } from 'date-fns';
-import { CalendarIcon } from 'lucide-react';
 import { FormEventHandler, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -30,11 +27,22 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
         budget: category?.budget || undefined as undefined | number,
     });
 
+    // Actualizar el formulario cuando cambia la categoría seleccionada
+    useEffect(() => {
+        if (category) {
+            setData('name', category.name);
+            setData('budget', category.budget);
+            setFormattedBudget(category.budget ? formatCurrencyInput(String(category.budget)).formatted : '');
+        } else {
+            reset();
+            setFormattedBudget('');
+        }
+    }, [category]);
+
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
 
         try {
-
             if (category) {
                 put(route('category.update', category.id), {
                     preserveScroll: true,
@@ -46,12 +54,12 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
                         onClose?.();
                     },
                     onError: (errors: any) => {
-                        console.error('Error al actualizar el gasto', errors);
-                        toast.error('Error al actualizar el gasto');
+                        console.error('Error al actualizar la categoria', errors);
+                        toast.error('Error al actualizar la categoria');
                     },
                 });
             } else {
-                post(route('expense.public-store'), {
+                post(route('category.store'), {
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
@@ -61,8 +69,8 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
                         onClose?.();
                     },
                     onError: (errors: any) => {
-                        console.error('Error al guardar el gasto', errors);
-                        toast.error('Error al guardar el gasto');
+                        console.error('Error al guardar la categoria', errors);
+                        toast.error('Error al guardar la categoria');
                     },
                 });
             }
@@ -71,18 +79,6 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
             toast.error('Error al procesar el formulario. Verifique los datos ingresados.');
         }
     }
-
-    // Prevent scroll to top when dialog closes
-    useEffect(() => {
-        const handleScroll = (e: Event) => {
-            if (!document.querySelector('[role="dialog"]')) {
-                e.preventDefault();
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll, { passive: false });
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
 
     return (
         <form className='w-full space-y-6' onSubmit={handleSubmit}>

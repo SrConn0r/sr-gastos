@@ -18,12 +18,15 @@ import {
     DrawerTrigger,
 } from "@/Components/ui/drawer";
 import { Category } from "@/types/category";
-import { Edit, Plus, Trash } from "lucide-react";
+import { ClipboardList, Edit, List, Loader2, Plus, Trash } from "lucide-react";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useEffect, useState } from "react";
 import CategoryForm from "./forms/category-form";
 import { DataTable } from "./ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
+import { router } from "@inertiajs/react";
+import { toast } from "sonner";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
 
 interface CategoryDialogProps {
     categories: Category[];
@@ -34,15 +37,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
     const [open, setOpen] = useState(false);
     const [currentCategory, setCurrentCategory] = useState<Category | undefined>(undefined);
     const isDesktop = useMediaQuery("(min-width: 768px)");
-    const [category, setCategory] = useState<Category | undefined>(undefined);
-
-    useEffect(() => {
-        if (category) {
-            setCurrentCategory(category);
-            setOpen(true);
-        }
-    }, [category]);
-
+    const [isDeleting, setIsDeleting] = useState(false);
     const handleOpenChange = (newOpen: boolean) => {
         setOpen(newOpen);
         if (!newOpen) {
@@ -59,6 +54,23 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
         setOpen(false);
         setCurrentCategory(undefined);
         onClose();
+    };
+
+    const handleDelete = (category: Category) => {
+        if (isDeleting) return;
+
+        setIsDeleting(true);
+        router.delete(route('category.destroy', category.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                toast.success('Categoria eliminada exitosamente');
+                setIsDeleting(false);
+            },
+            onError: () => {
+                toast.error('Error al eliminar el gasto');
+                setIsDeleting(false);
+            }
+        });
     };
 
     const columns: ColumnDef<Category>[] = [
@@ -88,12 +100,34 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
             cell: ({ row }) => {
                 return (
                     <div className="flex gap-2 justify-center">
-                        <Button variant="outline" size="icon">
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                                setCurrentCategory(row.original);
+                                setOpen(true);
+                            }}>
                             <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
-                            <Trash className="h-4 w-4" />
-                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" size="icon">
+                                    <Trash className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Esta acción no se puede deshacer. Esto eliminará permanentemente la categoría y sus datos.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction className="bg-destructive hover:bg-destructive/90" onClick={() => handleDelete(row.original)}>Eliminar</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                 );
             }
@@ -103,11 +137,11 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
         return (
             <Dialog open={open} onOpenChange={handleOpenChange}>
                 <DialogTrigger asChild>
-                    <Button variant="outline" className="md:mb-4 w-full md:w-fit" onClick={handleAddNew}>
-                        <Plus className="mr-2 h-4 w-4" /> Agregar Categoria
+                    <Button variant="outline" className="w-full md:w-fit" onClick={handleAddNew}>
+                        <ClipboardList className="mr-2 h-4 w-4" /> Gestionar Categorias
                     </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px]">
+                <DialogContent className="sm:max-w-[800px] max-h-[80vh] overflow-auto">
                     <DialogHeader>
                         <DialogTitle>{currentCategory ? 'Editar Categoria' : 'Agregar Categoria'}</DialogTitle>
                         <DialogDescription>
@@ -121,7 +155,13 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
                         onClose={handleClose}
                         category={currentCategory}
                     />
-                    <DataTable columns={columns} data={categories} />
+                    {
+                        isDeleting
+                            ? <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                                <Loader2 className="h-10 w-10 animate-spin" />
+                            </div>
+                            : <DataTable columns={columns} data={categories} />
+                    }
                 </DialogContent>
             </Dialog>
         );
@@ -130,8 +170,8 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
     return (
         <Drawer open={open} onOpenChange={handleOpenChange}>
             <DrawerTrigger asChild>
-                <Button variant="outline" className="mb-4" onClick={handleAddNew}>
-                    <Plus className="mr-2 h-4 w-4" /> Agregar Categoria
+                <Button variant="outline" onClick={handleAddNew}>
+                    <ClipboardList className="mr-2 h-4 w-4" /> Gestionar Categorias
                 </Button>
             </DrawerTrigger>
             <DrawerContent className="max-h-[80vh]">
@@ -149,7 +189,13 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
                         onClose={handleClose}
                         category={currentCategory}
                     />
-                    <DataTable columns={columns} data={categories} />
+                    {
+                        isDeleting
+                            ? <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+                                <Loader2 className="h-10 w-10 animate-spin" />
+                            </div>
+                            : <DataTable columns={columns} data={categories} />
+                    }
                 </div>
                 <DrawerFooter className="pt-2">
                     <DrawerClose asChild>
