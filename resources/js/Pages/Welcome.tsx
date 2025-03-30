@@ -5,6 +5,7 @@ import { Category } from '@/types/category';
 import { Head, Link } from '@inertiajs/react';
 import { LogIn } from 'lucide-react';
 import ExpenseForm from '@/Components/forms/expense-form';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function Welcome({
     auth,
@@ -18,8 +19,9 @@ export default function Welcome({
             <Head title="SrGastos" />
             <div className='flex flex-col items-center justify-center h-screen w-full p-8 md:px-16'>
                 <header className='flex w-full justify-between items-center'>
-                    <div></div>
-                    <img src="assets/images/sr-connor.svg" alt="Logo" width={180} />
+                    <div />
+                    {/* <img src="assets/images/sr-gastos.svg" alt="Logo" width={180} /> */}
+                    <ApplicationLogo className='w-40' />
                     <div>
                         <Link href='/login'>
                             <Button variant="outline" className='py-2'>

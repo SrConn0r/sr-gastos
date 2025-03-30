@@ -1,13 +1,12 @@
 import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
-import PrimaryButton from '@/Components/PrimaryButton';
-import TextInput from '@/Components/TextInput';
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Input } from '@/Components/ui';
+import { Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/Components/ui';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, Link, useForm } from '@inertiajs/react';
-import { ChevronDown, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { FormEventHandler } from 'react';
+import ApplicationLogo from '@/Components/ApplicationLogo';
 
 export default function Login({
     status,
@@ -47,7 +46,7 @@ export default function Login({
                     </Button>
                 </Link>
 
-                <img src="assets/images/sr-connor.svg" alt="Logo" width={200} className='mx-auto mb-4' />
+                <ApplicationLogo className='w-40 mx-auto mb-8' />
 
                 <Card className='w-full md:max-w-[600px]'>
                     <CardHeader>
