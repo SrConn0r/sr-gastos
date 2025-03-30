@@ -18,11 +18,9 @@ export default function Welcome({
         <GuestLayout>
             <Head title="SrGastos" />
             <div className='flex flex-col items-center justify-center h-screen w-full p-8 md:px-16'>
-                <header className='flex w-full justify-between items-center'>
-                    <div />
-                    {/* <img src="assets/images/sr-gastos.svg" alt="Logo" width={180} /> */}
+                <header className='flex w-full justify-start sm:justify-center items-center relative'>
                     <ApplicationLogo className='w-40' />
-                    <div>
+                    <div className='absolute right-0 top-0'>
                         <Link href='/login'>
                             <Button variant="outline" className='py-2'>
                                 Login <LogIn />
