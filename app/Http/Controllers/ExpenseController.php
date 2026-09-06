@@ -30,6 +30,7 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
+            'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
             'expense_date' => 'required|date',
             'category_id' => 'required|exists:categories,id'
         ]);
@@ -39,6 +40,7 @@ class ExpenseController extends Controller
         Expense::create([
             'title' => $validated['title'],
             'amount' => $validated['amount'],
+            'currency' => $validated['currency'] ?? Expense::DEFAULT_CURRENCY,
             'expense_date' => $validated['expense_date'],
             'category_id' => $validated['category_id'],
             'user_id' => Auth::id()
@@ -54,9 +56,12 @@ class ExpenseController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
+            'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
             'expense_date' => 'required|date',
             'category_id' => 'required|exists:categories,id'
         ]);
+
+        $validated['currency'] = $validated['currency'] ?? Expense::DEFAULT_CURRENCY;
 
         $category = Category::findOrFail($validated['category_id']);
 

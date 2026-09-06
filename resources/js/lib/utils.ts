@@ -5,8 +5,34 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export type Currency = 'COP' | 'USD' | 'BRL'
+
+export const CURRENCIES: { value: Currency; label: string }[] = [
+  { value: 'COP', label: 'COP — Peso' },
+  { value: 'USD', label: 'USD — Dólar' },
+  { value: 'BRL', label: 'BRL — Real' },
+]
+
+const CURRENCY_LOCALES: Record<Currency, string> = {
+  COP: 'es-CO',
+  USD: 'en-US',
+  BRL: 'pt-BR',
+}
+
+export const formatMoney = (amount: number, currency: Currency = 'COP') =>
+  new Intl.NumberFormat(CURRENCY_LOCALES[currency], {
+    style: 'currency',
+    currency,
+  }).format(amount)
+
+export const formatTotals = (totals: { currency: Currency; total: number }[] = []) =>
+  totals.length
+    ? totals.map((item) => formatMoney(item.total, item.currency)).join(' · ')
+    : formatMoney(0)
+
 export const formatCurrencyInput = (
-  value: string
+  value: string,
+  currency: Currency = 'COP'
 ): { formatted: string; raw: number } => {
   // Eliminamos caracteres no deseados excepto dígitos, comas y puntos
   let sanitizedValue = value.replace(/[^0-9.,]/g, '');
@@ -24,9 +50,9 @@ export const formatCurrencyInput = (
   const numericValue = parseFloat(normalizedValue) || 0;
 
   // Formatear el número usando Intl.NumberFormat
-  let formattedNumber = new Intl.NumberFormat('pt-BR', {
+  let formattedNumber = new Intl.NumberFormat(CURRENCY_LOCALES[currency], {
     style: 'currency',
-    currency: 'BRL',
+    currency,
     minimumFractionDigits: 0,
     maximumFractionDigits: 2,
     useGrouping: false,

@@ -3,14 +3,14 @@ import { DataTable } from '@/Components/ui/data-table';
 import { ExpenseDialog } from '@/Components/expense-dialog';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { PageProps } from '@/types';
-import { Expense } from '@/types/expense';
+import { CurrencyTotal, Expense } from '@/types/expense';
 import { Head, router } from '@inertiajs/react';
 import { ColumnDef } from '@tanstack/react-table';
 import { Category } from '@/types/category';
 import { Edit, Loader2, Trash } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { formatDateString } from '@/lib/utils';
+import { formatDateString, formatMoney } from '@/lib/utils';
 import { CategoryDialog } from '@/Components/category-dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
 import MonthExpenseTotal from '@/Components/widgets/month-expense-total';
@@ -19,7 +19,7 @@ import MonthExpenseTotal from '@/Components/widgets/month-expense-total';
 interface CategoryTotal {
     id: number;
     name: string;
-    total: number;
+    totals: CurrencyTotal[];
 }
 
 export default function Dashboard({ 
@@ -31,7 +31,7 @@ export default function Dashboard({
 }: PageProps<{ 
     expenses: Expense[], 
     categories: Category[], 
-    monthExpenseTotal: number, 
+    monthExpenseTotal: CurrencyTotal[], 
     monthExpenseTotalCategories: Expense[],
     monthExpenseTotalByCategory: CategoryTotal[]
 }>) {
@@ -67,10 +67,7 @@ export default function Dashboard({
                 centered: true,
             },
             cell: ({ row }) => {
-                return new Intl.NumberFormat('es-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                }).format(row.original.amount);
+                return formatMoney(row.original.amount, row.original.currency);
             }
         },
         {

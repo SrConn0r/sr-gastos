@@ -1,22 +1,20 @@
-import { formatCurrencyInput } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { formatTotals } from "@/lib/utils";
+import { Card, CardHeader, CardTitle } from "../ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
-import { Expense } from "@/types/expense";
+import { CurrencyTotal, Expense } from "@/types/expense";
 
-// Definir la interfaz para el total de gastos por categoría
 interface CategoryTotal {
     id: number;
     name: string;
-    total: number;
+    totals: CurrencyTotal[];
 }
 
 export default function MonthExpenseTotal({ 
     monthExpenseTotal, 
-    monthExpenseTotalCategories,
     monthExpenseTotalByCategory 
 }: { 
-    monthExpenseTotal: number, 
+    monthExpenseTotal: CurrencyTotal[], 
     monthExpenseTotalCategories: Expense[],
     monthExpenseTotalByCategory: CategoryTotal[]
 }) {
@@ -27,7 +25,7 @@ export default function MonthExpenseTotal({
         return (
             <Card>
                 <CardHeader className="py-4 md:w-fit w-full">
-                    <CardTitle>Total de Gastos del Mes: <span className="font-normal ml-auto">{formatCurrencyInput(monthExpenseTotal.toString()).formatted}</span></CardTitle>
+                    <CardTitle>Total de Gastos del Mes: <span className="font-normal ml-auto">{formatTotals(monthExpenseTotal)}</span></CardTitle>
                 </CardHeader>
                 {/* <CardContent>
                     <div className="space-y-2">
@@ -36,7 +34,7 @@ export default function MonthExpenseTotal({
                             {monthExpenseTotalByCategory.map((category) => (
                                 <div key={category.id} className="flex justify-between items-center text-sm">
                                     <span>{category.name}</span>
-                                    <span>{formatCurrencyInput(category.total.toString()).formatted}</span>
+                                    <span>{formatTotals(category.totals)}</span>
                                 </div>
                             ))}
                         </div>
@@ -49,7 +47,7 @@ export default function MonthExpenseTotal({
     return (
         <Accordion type="single" collapsible>
             <AccordionItem value="month-expense-total" className="bg-background rounded-xl p-4 shadow-sm">
-                <AccordionTrigger className="py-0 border-b-1 border-gray-600">Total de Gastos del Mes: <span className="font-normal ml-auto">{formatCurrencyInput(monthExpenseTotal.toString()).formatted}</span></AccordionTrigger>
+                <AccordionTrigger className="py-0 border-b-1 border-gray-600">Total de Gastos del Mes: <span className="font-normal ml-auto">{formatTotals(monthExpenseTotal)}</span></AccordionTrigger>
                 <AccordionContent className="py-4">
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold">Desglose por categoría:</h3>
@@ -57,7 +55,7 @@ export default function MonthExpenseTotal({
                             {monthExpenseTotalByCategory.map((category) => (
                                 <div key={category.id} className="flex justify-between items-center text-sm">
                                     <span className="capitalize underline">{category.name}</span>
-                                    <span>{formatCurrencyInput(category.total.toString()).formatted}</span>
+                                    <span>{formatTotals(category.totals)}</span>
                                 </div>
                             ))}
                         </div>

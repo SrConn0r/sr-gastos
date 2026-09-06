@@ -1,6 +1,6 @@
 import InputError from '@/Components/InputError';
 import { Button, Calendar, Input, Label, Popover, PopoverContent, PopoverTrigger, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/Components/ui';
-import { cn, formatCurrencyInput } from '@/lib/utils';
+import { cn, CURRENCIES, Currency, formatCurrencyInput } from '@/lib/utils';
 import { Category } from '@/types/category';
 import { Expense } from '@/types/expense';
 import { useForm } from '@inertiajs/react';
@@ -16,7 +16,7 @@ interface ExpenseFormProps {
 }
 
 export default function ExpenseForm({ categories, onClose, expense }: ExpenseFormProps) {
-    const [formattedAmount, setFormattedAmount] = useState(expense ? formatCurrencyInput(String(expense.amount)).formatted : '');
+    const [formattedAmount, setFormattedAmount] = useState(expense ? formatCurrencyInput(String(expense.amount), expense.currency).formatted : '');
     const [selectedCategory, setSelectedCategory] = useState<string>(expense?.category.id ? String(expense.category.id) : '');
 
     // Get initial date from expense or today
@@ -48,6 +48,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
         title: expense?.title || '',
         category_id: expense?.category.id || undefined as undefined | number,
         amount: expense?.amount || undefined as undefined | number,
+        currency: (expense?.currency || 'COP') as Currency,
         expense_date: getInitialDate(),
     });
 
@@ -72,6 +73,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                         setFormattedAmount('');
                         setSelectedCategory('');
                         setData('category_id', undefined);
+                        setData('currency', 'COP');
                         toast.success('Gasto actualizado exitosamente');
                         onClose?.();
                     },
@@ -89,6 +91,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                         setFormattedAmount('');
                         setSelectedCategory('');
                         setData('category_id', undefined);
+                        setData('currency', 'COP');
                         toast.success('Gasto guardado exitosamente');
                         onClose?.();
                     },
@@ -151,19 +154,48 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                 </Select>
                 <InputError message={errors.category_id} />
             </div>
-            <div>
-                <Label>Valor</Label>
-                <Input
-                    type='text'
-                    placeholder="Ingrese el monto"
-                    value={formattedAmount}
-                    onChange={(e) => {
-                        const { formatted, raw } = formatCurrencyInput(e.target.value);
-                        setFormattedAmount(formatted);
-                        setData('amount', raw);
-                    }}
-                />
-                <InputError message={errors.amount} />
+            <div className="flex gap-3">
+                <div className="flex-1">
+                    <Label>Valor</Label>
+                    <Input
+                        type='text'
+                        placeholder="Ingrese el monto"
+                        value={formattedAmount}
+                        onChange={(e) => {
+                            const { formatted, raw } = formatCurrencyInput(e.target.value, data.currency);
+                            setFormattedAmount(formatted);
+                            setData('amount', raw);
+                        }}
+                    />
+                    <InputError message={errors.amount} />
+                </div>
+                <div className="w-40">
+                    <Label>Moneda</Label>
+                    <Select
+                        value={data.currency}
+                        onValueChange={(value) => {
+                            const currency = value as Currency;
+                            setData('currency', currency);
+                            if (data.amount != null) {
+                                setFormattedAmount(formatCurrencyInput(String(data.amount), currency).formatted);
+                            }
+                        }}>
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Moneda" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Moneda</SelectLabel>
+                                {CURRENCIES.map((currency) => (
+                                    <SelectItem key={currency.value} value={currency.value}>
+                                        {currency.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                    <InputError message={errors.currency} />
+                </div>
             </div>
             <div>
                 <Label>Fecha</Label>

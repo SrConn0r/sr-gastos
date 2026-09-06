@@ -28,23 +28,32 @@ Route::get('/dashboard', function () {
     // Obtener todas las categorías
     $categories = Category::all();
 
-    // Calcular el total de gastos del mes actual
-    $monthExpenseTotal = Expense::whereMonth('created_at', now()->month)->sum('amount');
-
-    // Obtener los gastos del mes actual agrupados por categoría
-    $expensesByCategory = Expense::whereMonth('created_at', now()->month)
+    $monthExpenses = Expense::whereMonth('created_at', now()->month)
         ->with('category')
-        ->get()
-        ->groupBy('category_id');
+        ->get();
 
-    // Calcular el total por cada categoría
+    $groupCurrencyTotals = function ($expenses) {
+        return $expenses
+            ->groupBy('currency')
+            ->map(fn ($items, $currency) => [
+                'currency' => $currency,
+                'total' => (float) $items->sum('amount'),
+            ])
+            ->sortBy(fn ($item) => array_search($item['currency'], Expense::CURRENCIES, true))
+            ->values();
+    };
+
+    $monthExpenseTotal = $groupCurrencyTotals($monthExpenses);
+
+    $expensesByCategory = $monthExpenses->groupBy('category_id');
+
     $monthExpenseTotalByCategory = [];
     foreach ($expensesByCategory as $categoryId => $categoryExpenses) {
-        $category = Category::find($categoryId);
+        $category = $categoryExpenses->first()->category;
         $monthExpenseTotalByCategory[] = [
             'id' => $categoryId,
             'name' => $category->name,
-            'total' => $categoryExpenses->sum('amount')
+            'totals' => $groupCurrencyTotals($categoryExpenses),
         ];
     }
 

@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Expense extends Model
 {
+    public const CURRENCIES = ['COP', 'USD', 'BRL'];
 
-    protected $fillable = ['title', 'amount', 'expense_date', 'category_id'];
+    public const DEFAULT_CURRENCY = 'COP';
+
+    protected $fillable = ['title', 'amount', 'currency', 'expense_date', 'category_id'];
 
     protected $casts = [
         'expense_date' => 'date',
