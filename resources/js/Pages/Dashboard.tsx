@@ -131,12 +131,13 @@ export default function Dashboard({
                     <Button
                         variant="outline"
                         size="icon"
+                        aria-label="Editar gasto"
                         onClick={() => setSelectedExpense(row.original)}>
                         <Edit className='w-4 h-4' />
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="icon">
+                            <Button variant="outline" size="icon" aria-label="Eliminar gasto">
                                 <Trash className="h-4 w-4" />
                             </Button>
                         </AlertDialogTrigger>

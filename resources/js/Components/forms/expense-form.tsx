@@ -19,22 +19,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
     const [formattedAmount, setFormattedAmount] = useState(expense ? formatCurrencyInput(String(expense.amount), expense.currency).formatted : '');
     const [selectedCategory, setSelectedCategory] = useState<string>(expense?.category.id ? String(expense.category.id) : '');
 
-    // Get initial date from expense or today
-    const getInitialDate = () => {
-        if (expense?.expense_date) {
-            // Handle ISO date with timezone
-            let dateStr = String(expense.expense_date);
-            if (dateStr.includes('T')) {
-                dateStr = dateStr.split('T')[0];
-            }
-
-            // Create a date object from the clean date string
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const date = new Date(year, month - 1, day, 12, 0, 0);
-            return date;
-        }
-        return new Date();
-    };
+    const initialDate = expense?.expense_date.slice(0, 10) ?? format(new Date(), 'yyyy-MM-dd');
 
     const {
         data,
@@ -49,7 +34,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
         category_id: expense?.category.id || undefined as undefined | number,
         amount: expense?.amount || undefined as undefined | number,
         currency: (expense?.currency || 'COP') as Currency,
-        expense_date: getInitialDate(),
+        expense_date: initialDate,
     });
 
     const today = new Date();
@@ -57,55 +42,29 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        try {
-            // Format date as YYYY-MM-DD for submission
-            const formattedDate = format(data.expense_date, 'yyyy-MM-dd');
+        const options = {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                reset();
+                setFormattedAmount('');
+                setSelectedCategory('');
+                setData('category_id', undefined);
+                setData('currency', 'COP');
+                toast.success(expense ? 'Gasto actualizado exitosamente' : 'Gasto guardado exitosamente');
+                onClose?.();
+            },
+            onError: () => {
+                toast.error(expense ? 'Error al actualizar el gasto' : 'Error al guardar el gasto');
+            },
+        };
 
-            // Update the form data with the formatted date
-            setData('expense_date', formattedDate as any);
-
-            if (expense) {
-                put(route('expenses.update', expense.id), {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        reset();
-                        setFormattedAmount('');
-                        setSelectedCategory('');
-                        setData('category_id', undefined);
-                        setData('currency', 'COP');
-                        toast.success('Gasto actualizado exitosamente');
-                        onClose?.();
-                    },
-                    onError: (errors: any) => {
-                        console.error('Error al actualizar el gasto', errors);
-                        toast.error('Error al actualizar el gasto');
-                    },
-                });
-            } else {
-                post(route('expenses.store'), {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        reset();
-                        setFormattedAmount('');
-                        setSelectedCategory('');
-                        setData('category_id', undefined);
-                        setData('currency', 'COP');
-                        toast.success('Gasto guardado exitosamente');
-                        onClose?.();
-                    },
-                    onError: (errors: any) => {
-                        console.error('Error al guardar el gasto', errors);
-                        toast.error('Error al guardar el gasto');
-                    },
-                });
-            }
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            toast.error('Error al procesar el formulario. Verifique los datos ingresados.');
+        if (expense) {
+            put(route('expenses.update', expense.id), options);
+        } else {
+            post(route('expenses.store'), options);
         }
-    }
+    };
 
     // Prevent scroll to top when dialog closes
     useEffect(() => {
@@ -209,7 +168,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                             )}
                         >
                             {data.expense_date ? (
-                                format(data.expense_date, 'dd/MM/yyyy')
+                                format(new Date(`${data.expense_date}T12:00:00`), 'dd/MM/yyyy')
                             ) : (
                                 <span>Seleccionar fecha</span>
                             )}
@@ -219,16 +178,16 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                     <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                             mode="single"
-                            selected={data.expense_date}
+                            selected={data.expense_date ? new Date(`${data.expense_date}T12:00:00`) : undefined}
                             onSelect={(date: Date | undefined) => {
                                 if (date) {
-                                    setData("expense_date", date);
+                                    setData('expense_date', format(date, 'yyyy-MM-dd'));
                                 }
                             }}
                             disabled={(date) =>
                                 date > today || date < new Date("1900-01-01")
                             }
-                            defaultMonth={data.expense_date}
+                            defaultMonth={data.expense_date ? new Date(`${data.expense_date}T12:00:00`) : undefined}
                             initialFocus
                         />
                     </PopoverContent>

@@ -45,43 +45,26 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
     const handleSubmit: FormEventHandler = (e) => {
         e.preventDefault();
 
-        try {
-            if (category) {
-                put(route('categories.update', category.id), {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        reset();
-                        setFormattedBudget('');
-                        toast.success('Categoria actualizada exitosamente');
-                        onClose?.();
-                    },
-                    onError: (errors: any) => {
-                        console.error('Error al actualizar la categoria', errors);
-                        toast.error('Error al actualizar la categoria');
-                    },
-                });
-            } else {
-                post(route('categories.store'), {
-                    preserveScroll: true,
-                    preserveState: true,
-                    onSuccess: () => {
-                        reset();
-                        setFormattedBudget('');
-                        toast.success('Categoria guardada exitosamente');
-                        onClose?.();
-                    },
-                    onError: (errors: any) => {
-                        console.error('Error al guardar la categoria', errors);
-                        toast.error('Error al guardar la categoria');
-                    },
-                });
-            }
-        } catch (error) {
-            console.error('Error submitting form:', error);
-            toast.error('Error al procesar el formulario. Verifique los datos ingresados.');
+        const options = {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                reset();
+                setFormattedBudget('');
+                toast.success(category ? 'Categoria actualizada exitosamente' : 'Categoria guardada exitosamente');
+                onClose?.();
+            },
+            onError: () => {
+                toast.error(category ? 'Error al actualizar la categoria' : 'Error al guardar la categoria');
+            },
+        };
+
+        if (category) {
+            put(route('categories.update', category.id), options);
+        } else {
+            post(route('categories.store'), options);
         }
-    }
+    };
 
     return (
         <form className='w-full space-y-6' onSubmit={handleSubmit}>

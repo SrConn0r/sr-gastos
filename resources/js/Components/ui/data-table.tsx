@@ -71,12 +71,12 @@ interface ColumnSelectFilter {
     column: string;
 }
 
-function Filter({
+function Filter<TData>({
     column,
     selectData,
     placeholder,
 }: {
-    column: Column<any, unknown>;
+    column: Column<TData, unknown>;
     selectData: SelectData[];
     placeholder: string;
 }) {
@@ -85,10 +85,7 @@ function Filter({
 
     return filterVariant === "select" ? (
         <Select
-            onValueChange={(value) => {
-                console.log(value);
-                column.setFilterValue(value);
-            }}
+            onValueChange={(value) => column.setFilterValue(value)}
             value={(columnFilterValue ?? "") as string}
         >
             <SelectTrigger className="w-full sm:w-[180px]">
@@ -165,12 +162,7 @@ export function DataTable<TData, TValue>({
                 <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     {columnSelectFilter && !Array.isArray(columnSelectFilter) && (
                         <Filter
-                            column={
-                                table.getColumn(`${columnSelectFilter.column}`) as Column<
-                                    any,
-                                    unknown
-                                >
-                            }
+                            column={table.getColumn(`${columnSelectFilter.column}`) as Column<TData, unknown>}
                             selectData={columnSelectFilter.selectData ?? []}
                             placeholder={columnSelectFilter.placeholder ?? ""}
                         />
@@ -181,7 +173,7 @@ export function DataTable<TData, TValue>({
                             <Filter
                                 key={filter.column}
                                 column={
-                                    table.getColumn(`${filter.column}`) as Column<any, unknown>
+                                    table.getColumn(`${filter.column}`) as Column<TData, unknown>
                                 }
                                 selectData={filter.selectData ?? []}
                                 placeholder={filter.placeholder ?? ""}
@@ -192,6 +184,7 @@ export function DataTable<TData, TValue>({
                 {changeLayout && (
                     <div className="hidden md:flex sm:gap-4 gap-2">
                         <Button
+                            aria-label="Vista de lista"
                             onClick={() => {
                                 setIsGridView(false);
                             }}
@@ -200,6 +193,7 @@ export function DataTable<TData, TValue>({
                             <List />
                         </Button>
                         <Button
+                            aria-label="Vista de cuadricula"
                             onClick={() => {
                                 setIsGridView(true);
                             }}
@@ -238,18 +232,14 @@ export function DataTable<TData, TValue>({
                                     className="bg-card text-card-foreground rounded-lg shadow-md py-4 px-6 space-y-4"
                                 >
                                     {row.getVisibleCells().map((cell) => {
-                                        let header: any;
-                                        table.getHeaderGroups().map((headerGroup) => {
-                                            headerGroup.headers.forEach((h) => {
-                                                if (h.id === cell.column.id) {
-                                                    header = h.column.columnDef.header;
-                                                }
-                                            });
-                                        });
+                                        const header = table.getFlatHeaders().find((item) => item.id === cell.column.id);
+
                                         return (
                                             <div key={cell.id} className="gap-2 flex items-center">
                                                 <strong className="capitalize text-center">
-                                                    {cell.column.columnDef.header ? header : cell.column.id}:
+                                                    {header
+                                                        ? flexRender(header.column.columnDef.header, header.getContext())
+                                                        : cell.column.id}:
                                                 </strong>
                                                 <span className="flex-1 text-right justify-end">
                                                     {flexRender(

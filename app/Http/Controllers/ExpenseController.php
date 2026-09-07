@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ExpenseRequest;
 use App\Http\Requests\ExpenseFilterRequest;
+use App\Http\Requests\ExpenseRequest;
 use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Database\Eloquent\Builder;

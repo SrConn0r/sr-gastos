@@ -104,6 +104,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
                         <Button
                             variant="outline"
                             size="icon"
+                            aria-label="Editar categoria"
                             onClick={() => {
                                 setCurrentCategory(row.original);
                                 setOpen(true);
@@ -112,7 +113,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
                         </Button>
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="icon">
+                                <Button variant="outline" size="icon" aria-label="Eliminar categoria">
                                     <Trash className="h-4 w-4" />
                                 </Button>
                             </AlertDialogTrigger>
