@@ -5,23 +5,51 @@ namespace App\Http\Controllers;
 use App\Models\Category;
 use App\Models\Expense;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Inertia;
 
 class ExpenseController extends Controller
 {
-    use AuthorizesRequests;
-
     public function index()
     {
-        $expenses = Expense::where('user_id', Auth::id())->get()->sort('expense_date')->paginate(15);
+        $expenses = Expense::with('category')
+            ->orderByDesc('expense_date')
+            ->get();
         $categories = Category::all();
+        $monthExpenses = Expense::whereMonth('created_at', now()->month)
+            ->with('category')
+            ->get();
+
+        $groupCurrencyTotals = function ($items) {
+            return $items
+                ->groupBy('currency')
+                ->map(fn ($expenses, $currency) => [
+                    'currency' => $currency,
+                    'total' => (float) $expenses->sum('amount'),
+                ])
+                ->sortBy(fn ($item) => array_search($item['currency'], Expense::CURRENCIES, true))
+                ->values();
+        };
+
+        $monthExpenseTotalByCategory = $monthExpenses
+            ->groupBy('category_id')
+            ->map(function ($categoryExpenses) use ($groupCurrencyTotals) {
+                $category = $categoryExpenses->first()->category;
+
+                return [
+                    'id' => $category->id,
+                    'name' => $category->name,
+                    'totals' => $groupCurrencyTotals($categoryExpenses),
+                ];
+            })
+            ->values();
 
         return Inertia::render('Dashboard', [
             'expenses' => $expenses,
-            'categories' => $categories
+            'categories' => $categories,
+            'monthExpenseTotal' => $groupCurrencyTotals($monthExpenses),
+            'monthExpenseTotalCategories' => $monthExpenses->groupBy('category_id'),
+            'monthExpenseTotalByCategory' => $monthExpenseTotalByCategory,
         ]);
     }
 
@@ -32,18 +60,12 @@ class ExpenseController extends Controller
             'amount' => 'required|numeric|min:0',
             'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
             'expense_date' => 'required|date',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'required|exists:categories,id',
         ]);
 
-        $category = Category::findOrFail($validated['category_id']);
-
         Expense::create([
-            'title' => $validated['title'],
-            'amount' => $validated['amount'],
+            ...$validated,
             'currency' => $validated['currency'] ?? Expense::DEFAULT_CURRENCY,
-            'expense_date' => $validated['expense_date'],
-            'category_id' => $validated['category_id'],
-            'user_id' => Auth::id()
         ]);
 
         return Redirect::back()->with('message', 'Transacción agregada exitosamente!');
@@ -51,29 +73,24 @@ class ExpenseController extends Controller
 
     public function update(Request $request, Expense $expense)
     {
-        // $this->authorize('update', $expense);
-
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'amount' => 'required|numeric|min:0',
             'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
             'expense_date' => 'required|date',
-            'category_id' => 'required|exists:categories,id'
+            'category_id' => 'required|exists:categories,id',
         ]);
 
-        $validated['currency'] = $validated['currency'] ?? Expense::DEFAULT_CURRENCY;
-
-        $category = Category::findOrFail($validated['category_id']);
-
-        $expense->update($validated);
+        $expense->update([
+            ...$validated,
+            'currency' => $validated['currency'] ?? Expense::DEFAULT_CURRENCY,
+        ]);
 
         return Redirect::back();
     }
 
     public function destroy(Expense $expense)
     {
-        // $this->authorize('delete', $expense);
-
         $expense->delete();
 
         return Redirect::back();

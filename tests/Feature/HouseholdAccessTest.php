@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Category;
+use App\Models\Expense;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 it('redirects guests from the root page to login', function () {
     $this->get('/')->assertRedirect(route('login'));
@@ -28,4 +30,23 @@ it('redirects authenticated users from root to the dashboard', function () {
     $this->actingAs(User::factory()->create())
         ->get('/')
         ->assertRedirect(route('dashboard'));
+});
+
+it('shows shared expenses to either household user', function () {
+    $user = User::factory()->create();
+    $category = Category::create(['name' => 'Food']);
+    Expense::create([
+        'title' => 'Lunch',
+        'amount' => 20,
+        'currency' => 'USD',
+        'expense_date' => '2026-09-07',
+        'category_id' => $category->id,
+    ]);
+
+    $this->actingAs($user)
+        ->get(route('dashboard'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('expenses.0.title', 'Lunch')
+        );
 });

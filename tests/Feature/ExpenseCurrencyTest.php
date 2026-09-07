@@ -5,10 +5,14 @@ use App\Models\Expense;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
+beforeEach(function () {
+    $this->actingAs(User::factory()->create());
+});
+
 it('stores an expense with the selected currency', function () {
     $category = Category::create(['name' => 'Comida']);
 
-    $this->post(route('expense.public-store'), [
+    $this->post(route('expenses.store'), [
         'title' => 'Almuerzo',
         'amount' => 20,
         'expense_date' => '2026-09-06',
@@ -25,7 +29,7 @@ it('stores an expense with the selected currency', function () {
 it('defaults currency to COP when omitted', function () {
     $category = Category::create(['name' => 'Transporte']);
 
-    $this->post(route('expense.public-store'), [
+    $this->post(route('expenses.store'), [
         'title' => 'Taxi',
         'amount' => 15000,
         'expense_date' => '2026-09-06',
@@ -41,7 +45,7 @@ it('defaults currency to COP when omitted', function () {
 it('rejects an invalid currency', function () {
     $category = Category::create(['name' => 'Otros']);
 
-    $this->post(route('expense.public-store'), [
+    $this->post(route('expenses.store'), [
         'title' => 'Cafe',
         'amount' => 5,
         'expense_date' => '2026-09-06',
