@@ -16,7 +16,10 @@ class ExpenseController extends Controller
             ->orderByDesc('expense_date')
             ->get();
         $categories = Category::all();
-        $monthExpenses = Expense::whereMonth('created_at', now()->month)
+        $monthExpenses = Expense::whereBetween('expense_date', [
+            now()->startOfMonth()->toDateString(),
+            now()->endOfMonth()->toDateString(),
+        ])
             ->with('category')
             ->get();
 
@@ -31,14 +34,22 @@ class ExpenseController extends Controller
                 ->values();
         };
 
-        $monthExpenseTotalByCategory = $monthExpenses
-            ->groupBy('category_id')
-            ->map(function ($categoryExpenses) use ($groupCurrencyTotals) {
-                $category = $categoryExpenses->first()->category;
+        $expensesByCategory = $monthExpenses->groupBy('category_id');
+        $monthExpenseTotalByCategory = $categories
+            ->map(function ($category) use ($expensesByCategory, $groupCurrencyTotals) {
+                $categoryExpenses = $expensesByCategory->get($category->id, collect());
+                $budget = $category->budget === null ? null : (float) $category->budget;
+                $budgetSpent = (float) $categoryExpenses
+                    ->where('currency', $category->budget_currency)
+                    ->sum('amount');
 
                 return [
                     'id' => $category->id,
                     'name' => $category->name,
+                    'budget' => $budget,
+                    'budget_currency' => $category->budget_currency,
+                    'budget_spent' => $budgetSpent,
+                    'remaining_budget' => $budget === null ? null : $budget - $budgetSpent,
                     'totals' => $groupCurrencyTotals($categoryExpenses),
                 ];
             })
@@ -48,7 +59,7 @@ class ExpenseController extends Controller
             'expenses' => $expenses,
             'categories' => $categories,
             'monthExpenseTotal' => $groupCurrencyTotals($monthExpenses),
-            'monthExpenseTotalCategories' => $monthExpenses->groupBy('category_id'),
+            'monthExpenseTotalCategories' => $expensesByCategory,
             'monthExpenseTotalByCategory' => $monthExpenseTotalByCategory,
         ]);
     }

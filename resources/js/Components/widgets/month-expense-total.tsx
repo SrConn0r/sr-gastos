@@ -1,5 +1,5 @@
-import { formatTotals } from "@/lib/utils";
-import { Card, CardHeader, CardTitle } from "../ui/card";
+import { formatMoney, formatTotals } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
 import { CurrencyTotal, Expense } from "@/types/expense";
@@ -7,7 +7,31 @@ import { CurrencyTotal, Expense } from "@/types/expense";
 interface CategoryTotal {
     id: number;
     name: string;
+    budget: number | null;
+    budget_currency: Expense['currency'];
+    budget_spent: number;
+    remaining_budget: number | null;
     totals: CurrencyTotal[];
+}
+
+function CategoryBreakdown({ categories }: { categories: CategoryTotal[] }) {
+    return (
+        <div className="space-y-2">
+            {categories.map((category) => (
+                <div key={category.id} className="text-sm">
+                    <div className="flex justify-between items-center">
+                        <span className="capitalize">{category.name}</span>
+                        <span>{formatTotals(category.totals)}</span>
+                    </div>
+                    {category.budget !== null && (
+                        <div className="text-xs text-muted-foreground">
+                            Presupuesto: {formatMoney(category.budget_spent, category.budget_currency)} / {formatMoney(category.budget, category.budget_currency)}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    );
 }
 
 export default function MonthExpenseTotal({ 
@@ -27,19 +51,12 @@ export default function MonthExpenseTotal({
                 <CardHeader className="py-4 md:w-fit w-full">
                     <CardTitle>Total de Gastos del Mes: <span className="font-normal ml-auto">{formatTotals(monthExpenseTotal)}</span></CardTitle>
                 </CardHeader>
-                {/* <CardContent>
+                <CardContent>
                     <div className="space-y-2">
                         <h3 className="text-sm font-medium">Desglose por categoría:</h3>
-                        <div className="space-y-1">
-                            {monthExpenseTotalByCategory.map((category) => (
-                                <div key={category.id} className="flex justify-between items-center text-sm">
-                                    <span>{category.name}</span>
-                                    <span>{formatTotals(category.totals)}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <CategoryBreakdown categories={monthExpenseTotalByCategory} />
                     </div>
-                </CardContent> */}
+                </CardContent>
             </Card>
         );
     }
@@ -51,14 +68,7 @@ export default function MonthExpenseTotal({
                 <AccordionContent className="py-4">
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold">Desglose por categoría:</h3>
-                        <div className="space-y-2">
-                            {monthExpenseTotalByCategory.map((category) => (
-                                <div key={category.id} className="flex justify-between items-center text-sm">
-                                    <span className="capitalize underline">{category.name}</span>
-                                    <span>{formatTotals(category.totals)}</span>
-                                </div>
-                            ))}
-                        </div>
+                        <CategoryBreakdown categories={monthExpenseTotalByCategory} />
                     </div>
                 </AccordionContent>
             </AccordionItem>

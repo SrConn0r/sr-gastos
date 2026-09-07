@@ -19,6 +19,10 @@ import MonthExpenseTotal from '@/Components/widgets/month-expense-total';
 interface CategoryTotal {
     id: number;
     name: string;
+    budget: number | null;
+    budget_currency: Expense['currency'];
+    budget_spent: number;
+    remaining_budget: number | null;
     totals: CurrencyTotal[];
 }
 
