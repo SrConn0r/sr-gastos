@@ -14,12 +14,13 @@ SR Gastos is a private household expense ledger built with Laravel, Inertia, and
 composer install
 npm install
 cp .env.example .env
+docker compose up -d mysql
 php artisan key:generate
 php artisan migrate
 composer dev
 ```
 
-Configure the database credentials in `.env` before migrating. `composer dev` starts Laravel, Vite, the queue listener, and the local log viewer. The app has no public registration route; create the two household users through a seeder or `php artisan tinker`.
+`docker compose up -d mysql` starts MySQL 8.4 on `localhost:3306` using the values in `.env`; its data is stored in the `mysql-data` Docker volume. The `DB_*` and `MYSQL_APP_*` credentials in `.env.example` match by default—keep them aligned if you change either. To use another local port, change `FORWARD_DB_PORT`. `composer dev` starts Laravel, Vite, the queue listener, and the local log viewer. The app has no public registration route; create the two household users through a seeder or `php artisan tinker`.
 
 ## Quality Checks
 

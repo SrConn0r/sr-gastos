@@ -113,7 +113,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                 </Select>
                 <InputError message={errors.category_id} />
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex-1">
                     <Label>Valor</Label>
                     <Input
@@ -128,7 +128,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                     />
                     <InputError message={errors.amount} />
                 </div>
-                <div className="w-40">
+                <div className="w-full sm:w-40">
                     <Label>Moneda</Label>
                     <Select
                         value={data.currency}
