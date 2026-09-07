@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ExpenseRequest;
 use App\Models\Category;
 use App\Models\Expense;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 
@@ -53,38 +53,16 @@ class ExpenseController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(ExpenseRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
-            'expense_date' => 'required|date',
-            'category_id' => 'required|exists:categories,id',
-        ]);
-
-        Expense::create([
-            ...$validated,
-            'currency' => $validated['currency'] ?? Expense::DEFAULT_CURRENCY,
-        ]);
+        Expense::create($request->validatedExpense());
 
         return Redirect::back()->with('message', 'Transacción agregada exitosamente!');
     }
 
-    public function update(Request $request, Expense $expense)
+    public function update(ExpenseRequest $request, Expense $expense)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'currency' => 'nullable|in:'.implode(',', Expense::CURRENCIES),
-            'expense_date' => 'required|date',
-            'category_id' => 'required|exists:categories,id',
-        ]);
-
-        $expense->update([
-            ...$validated,
-            'currency' => $validated['currency'] ?? Expense::DEFAULT_CURRENCY,
-        ]);
+        $expense->update($request->validatedExpense());
 
         return Redirect::back();
     }
