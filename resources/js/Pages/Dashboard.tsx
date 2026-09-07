@@ -42,7 +42,7 @@ export default function Dashboard({
         if (isDeleting) return;
 
         setIsDeleting(true);
-        router.delete(route('expense.destroy', expense.id), {
+        router.delete(route('expenses.destroy', expense.id), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Gasto eliminado exitosamente');

@@ -61,7 +61,7 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
         if (isDeleting) return;
 
         setIsDeleting(true);
-        router.delete(route('category.destroy', category.id), {
+        router.delete(route('categories.destroy', category.id), {
             preserveScroll: true,
             onSuccess: () => {
                 toast.success('Categoria eliminada exitosamente');
@@ -209,4 +209,4 @@ export function CategoryDialog({ categories, onClose }: CategoryDialogProps) {
             </DrawerContent>
         </Drawer>
     );
-} 
+}

@@ -2,64 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\CategoryRequest;
 use App\Models\Category;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class CategoryController extends Controller
 {
-    use AuthorizesRequests;
-
-    public function index()
+    public function store(CategoryRequest $request)
     {
-        $categories = Category::withSum('expenses', 'amount')
-            ->get()
-            ->map(function ($category) {
-                return [
-                    ...$category->toArray(),
-                    'remaining_budget' => $category->remaining_budget
-                ];
-            });
+        Category::create($request->validated());
 
-        return Inertia::render('Categories/Index', [
-            'categories' => $categories
-        ]);
+        return back();
     }
 
-    public function store(Request $request)
+    public function update(CategoryRequest $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'budget' => 'nullable|numeric|min:0'
-        ]);
+        $category->update($request->validated());
 
-        Category::create($validated);
-
-        return redirect()->back();
-    }
-
-    public function update(Request $request, Category $category)
-    {
-        // $this->authorize('update', $category);
-
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'budget' => 'nullable|numeric|min:0'
-        ]);
-
-        $category->update($validated);
-
-        return redirect()->back();
+        return back();
     }
 
     public function destroy(Category $category)
     {
-        // $this->authorize('delete', $category);
+        if ($category->expenses()->exists()) {
+            return back()->withErrors([
+                'category' => 'Move or delete this category’s expenses before deleting it.',
+            ]);
+        }
 
         $category->delete();
 
-        return redirect()->back();
+        return back();
     }
 }

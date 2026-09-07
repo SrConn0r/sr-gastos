@@ -65,7 +65,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
             setData('expense_date', formattedDate as any);
 
             if (expense) {
-                put(route('expense.update', expense.id), {
+                put(route('expenses.update', expense.id), {
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {

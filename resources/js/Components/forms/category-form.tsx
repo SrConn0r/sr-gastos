@@ -1,6 +1,6 @@
 import InputError from '@/Components/InputError';
-import { Button, Input, Label } from '@/Components/ui';
-import { formatCurrencyInput } from '@/lib/utils';
+import { Button, Input, Label, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/Components/ui';
+import { CURRENCIES, Currency, formatCurrencyInput } from '@/lib/utils';
 import { Category } from '@/types/category';
 import { useForm } from '@inertiajs/react';
 import { FormEventHandler, useEffect, useState } from 'react';
@@ -12,7 +12,8 @@ interface CategoryFormProps {
 }
 
 export default function CategoryForm({ onClose, category }: CategoryFormProps) {
-    const [formattedBudget, setFormattedBudget] = useState(category ? formatCurrencyInput(String(category.budget)).formatted : '');
+    const initialCurrency = category?.budget_currency || 'COP';
+    const [formattedBudget, setFormattedBudget] = useState(category?.budget ? formatCurrencyInput(String(category.budget), initialCurrency).formatted : '');
 
     const {
         data,
@@ -25,6 +26,7 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
     } = useForm({
         name: category?.name || '',
         budget: category?.budget || undefined as undefined | number,
+        budget_currency: initialCurrency as Currency,
     });
 
     // Actualizar el formulario cuando cambia la categoría seleccionada
@@ -32,7 +34,8 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
         if (category) {
             setData('name', category.name);
             setData('budget', category.budget);
-            setFormattedBudget(category.budget ? formatCurrencyInput(String(category.budget)).formatted : '');
+            setData('budget_currency', category.budget_currency);
+            setFormattedBudget(category.budget ? formatCurrencyInput(String(category.budget), category.budget_currency).formatted : '');
         } else {
             reset();
             setFormattedBudget('');
@@ -44,7 +47,7 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
 
         try {
             if (category) {
-                put(route('category.update', category.id), {
+                put(route('categories.update', category.id), {
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
@@ -59,7 +62,7 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
                     },
                 });
             } else {
-                post(route('category.store'), {
+                post(route('categories.store'), {
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
@@ -99,12 +102,40 @@ export default function CategoryForm({ onClose, category }: CategoryFormProps) {
                     placeholder="Ingrese el presupuesto"
                     value={formattedBudget}
                     onChange={(e) => {
-                        const { formatted, raw } = formatCurrencyInput(e.target.value);
+                        const { formatted, raw } = formatCurrencyInput(e.target.value, data.budget_currency);
                         setFormattedBudget(formatted);
                         setData('budget', raw);
                     }}
                 />
                 <InputError message={errors.budget} />
+            </div>
+
+            <div>
+                <Label>Moneda del presupuesto</Label>
+                <Select
+                    value={data.budget_currency}
+                    onValueChange={(value) => {
+                        const currency = value as Currency;
+                        setData('budget_currency', currency);
+                        if (data.budget != null) {
+                            setFormattedBudget(formatCurrencyInput(String(data.budget), currency).formatted);
+                        }
+                    }}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Moneda" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectGroup>
+                            <SelectLabel>Moneda</SelectLabel>
+                            {CURRENCIES.map((currency) => (
+                                <SelectItem key={currency.value} value={currency.value}>
+                                    {currency.label}
+                                </SelectItem>
+                            ))}
+                        </SelectGroup>
+                    </SelectContent>
+                </Select>
+                <InputError message={errors.budget_currency} />
             </div>
 
             <Button
