@@ -38,8 +38,7 @@ export default function MonthExpenseTotal({
     monthExpenseTotal, 
     monthExpenseTotalByCategory 
 }: { 
-    monthExpenseTotal: CurrencyTotal[], 
-    monthExpenseTotalCategories: Expense[],
+    monthExpenseTotal: CurrencyTotal[],
     monthExpenseTotalByCategory: CategoryTotal[]
 }) {
 

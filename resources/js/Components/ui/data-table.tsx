@@ -56,6 +56,8 @@ interface DataTableProps<TData, TValue> {
     columnSelectFilter?: ColumnSelectFilter | ColumnSelectFilter[];
     changeLayout?: boolean;
     children?: (rowData: TData) => React.ReactNode;
+    serverPagination?: boolean;
+    showToolbar?: boolean;
 }
 
 interface SelectData {
@@ -111,6 +113,8 @@ export function DataTable<TData, TValue>({
     columnSelectFilter,
     changeLayout = false,
     children,
+    serverPagination = false,
+    showToolbar = true,
 }: DataTableProps<TData, TValue>) {
     const [sorting, setSorting] = React.useState<SortingState>([]);
     const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -132,6 +136,7 @@ export function DataTable<TData, TValue>({
         columns,
         getCoreRowModel: getCoreRowModel(),
         getPaginationRowModel: getPaginationRowModel(),
+        manualPagination: serverPagination,
         onSortingChange: setSorting,
         getSortedRowModel: getSortedRowModel(),
         onColumnFiltersChange: setColumnFilters,
@@ -149,7 +154,7 @@ export function DataTable<TData, TValue>({
 
     return (
         <>
-            <div className="flex flex-col sm:flex-row items-center py-4 sm:gap-4 gap-2 w-full">
+            {showToolbar && <div className="flex flex-col sm:flex-row items-center py-4 sm:gap-4 gap-2 w-full">
                 <Input
                     placeholder="Buscar"
                     value={globalFilter ?? ""}
@@ -216,7 +221,7 @@ export function DataTable<TData, TValue>({
                     <FilterX />
                     Limpiar Filtros
                 </Button>
-            </div>
+            </div>}
             {isGridView ? (
                 <>
                     {children ? (
@@ -332,9 +337,9 @@ export function DataTable<TData, TValue>({
                     </Table>
                 </div>
             )}
-            <div className="p-4">
+            {!serverPagination && <div className="p-4">
                 <DataTablePagination table={table} />
-            </div>
+            </div>}
             {/* <pre>
                 {JSON.stringify(
                     { columnFilters: table.getState().columnFilters },

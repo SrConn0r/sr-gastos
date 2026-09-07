@@ -47,6 +47,6 @@ it('shows shared expenses to either household user', function () {
         ->get(route('dashboard'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
-            ->where('expenses.0.title', 'Lunch')
+            ->where('expenses.data.0.title', 'Lunch')
         );
 });
