@@ -83,7 +83,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                     },
                 });
             } else {
-                post(route('expense.public-store'), {
+                post(route('expenses.store'), {
                     preserveScroll: true,
                     preserveState: true,
                     onSuccess: () => {
