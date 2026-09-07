@@ -188,7 +188,7 @@ export default function ExpenseForm({ categories, onClose, expense }: ExpenseFor
                                 date > today || date < new Date("1900-01-01")
                             }
                             defaultMonth={data.expense_date ? new Date(`${data.expense_date}T12:00:00`) : undefined}
-                            initialFocus
+                            autoFocus
                         />
                     </PopoverContent>
                 </Popover>
