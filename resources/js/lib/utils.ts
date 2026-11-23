@@ -13,13 +13,12 @@ export function toUrl(url: NonNullable<InertiaLinkProps['href']>): string {
 
 export const CURRENCIES = ['COP', 'USD', 'BRL'] as const;
 
-const CURRENCY_LOCALES = { COP: 'es-CO', USD: 'en-US', BRL: 'pt-BR' };
-
 export function formatMoney(
     amount: number | string,
     currency: (typeof CURRENCIES)[number] = 'COP',
 ): string {
-    return new Intl.NumberFormat(CURRENCY_LOCALES[currency], {
+    // es-CO everywhere so USD reads "US$" and never looks like COP's "$".
+    return new Intl.NumberFormat('es-CO', {
         style: 'currency',
         currency,
     }).format(Number(amount));
@@ -40,3 +39,7 @@ export function formatMonth(month: string): string {
         year: '2-digit',
     });
 }
+
+export const MONTHS = Array.from({ length: 12 }, (_, month) =>
+    new Date(2000, month, 1).toLocaleDateString('es-CO', { month: 'long' }),
+);

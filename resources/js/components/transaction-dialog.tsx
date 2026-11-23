@@ -23,15 +23,28 @@ import { Spinner } from '@/components/ui/spinner';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CURRENCIES, formatMoney } from '@/lib/utils';
 import { store, update } from '@/routes/transactions';
-import type { Category, CategoryType, Currency, Transaction } from '@/types';
+import type {
+    Category,
+    CategoryType,
+    Currency,
+    RecurringExpense,
+    Transaction,
+} from '@/types';
 
 type Props = {
     categories: Pick<Category, 'id' | 'name' | 'type'>[];
     transaction?: Transaction;
+    /** Prefills a new expense, e.g. the payment of a fixed bill or subscription. */
+    payment?: RecurringExpense;
     trigger: ReactNode;
 };
 
-export function TransactionDialog({ categories, transaction, trigger }: Props) {
+export function TransactionDialog({
+    categories,
+    transaction,
+    payment,
+    trigger,
+}: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -40,12 +53,17 @@ export function TransactionDialog({ categories, transaction, trigger }: Props) {
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
-                        {transaction ? 'Editar movimiento' : 'Nuevo movimiento'}
+                        {payment
+                            ? `Registrar pago · ${payment.name}`
+                            : transaction
+                              ? 'Editar movimiento'
+                              : 'Nuevo movimiento'}
                     </DialogTitle>
                 </DialogHeader>
                 <TransactionForm
                     categories={categories}
                     transaction={transaction}
+                    payment={payment}
                     onSuccess={() => setOpen(false)}
                 />
             </DialogContent>
@@ -56,15 +74,19 @@ export function TransactionDialog({ categories, transaction, trigger }: Props) {
 function TransactionForm({
     categories,
     transaction,
+    payment,
     onSuccess,
 }: Omit<Props, 'trigger'> & { onSuccess: () => void }) {
     const [type, setType] = useState<CategoryType>(
         transaction?.category.type ?? 'expense',
     );
-    const [amount, setAmount] = useState(transaction?.amount ?? '');
-    const [currency, setCurrency] = useState<Currency>(
-        transaction?.currency ?? 'COP',
+    const [amount, setAmount] = useState(
+        transaction?.amount ?? payment?.amount ?? '',
     );
+    const [currency, setCurrency] = useState<Currency>(
+        transaction?.currency ?? payment?.currency ?? 'COP',
+    );
+    const categoryId = transaction?.category_id ?? payment?.category_id;
     const today = new Date().toLocaleDateString('en-CA');
 
     return (
@@ -76,6 +98,13 @@ function TransactionForm({
         >
             {({ processing, errors }) => (
                 <>
+                    {payment && (
+                        <input
+                            type="hidden"
+                            name="recurring_expense_id"
+                            value={payment.id}
+                        />
+                    )}
                     <ToggleGroup
                         type="single"
                         variant="outline"
@@ -99,7 +128,7 @@ function TransactionForm({
                             id="title"
                             name="title"
                             required
-                            defaultValue={transaction?.title}
+                            defaultValue={transaction?.title ?? payment?.name}
                         />
                         <InputError message={errors.title} />
                     </div>
@@ -110,8 +139,13 @@ function TransactionForm({
                             key={type}
                             name="category_id"
                             defaultValue={
-                                transaction?.category.type === type
-                                    ? String(transaction.category_id)
+                                categoryId &&
+                                categories.some(
+                                    (category) =>
+                                        category.id === categoryId &&
+                                        category.type === type,
+                                )
+                                    ? String(categoryId)
                                     : undefined
                             }
                         >

@@ -1,5 +1,11 @@
 import { Link } from '@inertiajs/react';
-import { ArrowLeftRight, LayoutGrid, Tags } from 'lucide-react';
+import {
+    ArrowLeftRight,
+    CalendarClock,
+    House,
+    LayoutGrid,
+    Tags,
+} from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,12 +20,16 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as categories } from '@/routes/categories';
+import { index as fixedExpenses } from '@/routes/fixed-expenses';
+import { index as subscriptions } from '@/routes/subscriptions';
 import { index as transactions } from '@/routes/transactions';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     { title: 'Inicio', href: dashboard(), icon: LayoutGrid },
     { title: 'Movimientos', href: transactions(), icon: ArrowLeftRight },
+    { title: 'Gastos fijos', href: fixedExpenses(), icon: House },
+    { title: 'Suscripciones', href: subscriptions(), icon: CalendarClock },
     { title: 'Categorías', href: categories(), icon: Tags },
 ];
 

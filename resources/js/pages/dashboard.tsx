@@ -1,6 +1,10 @@
 import { Head, router } from '@inertiajs/react';
+import { Receipt } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import Heading from '@/components/heading';
+import { TransactionDialog } from '@/components/transaction-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     ChartContainer,
@@ -17,9 +21,15 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { CURRENCIES, cn, formatMonth, formatMoney } from '@/lib/utils';
+import {
+    CURRENCIES,
+    cn,
+    formatDate,
+    formatMonth,
+    formatMoney,
+} from '@/lib/utils';
 import { dashboard } from '@/routes';
-import type { Currency } from '@/types';
+import type { Category, Currency, RecurringExpense } from '@/types';
 
 type Props = {
     currency: Currency;
@@ -38,6 +48,8 @@ type Props = {
     }[];
     expensesByCategory: { category: string; total: number }[];
     monthly: { month: string; income: number; expense: number }[];
+    pending: (RecurringExpense & { due_date: string; overdue: boolean })[];
+    categories: Pick<Category, 'id' | 'name' | 'type'>[];
 };
 
 // Validated (light + dark) for CVD separation and contrast.
@@ -55,6 +67,8 @@ export default function Dashboard({
     budgets,
     expensesByCategory,
     monthly,
+    pending,
+    categories,
 }: Props) {
     const rows = totals.length
         ? totals
@@ -100,6 +114,54 @@ export default function Dashboard({
                         </Card>
                     ))}
                 </div>
+
+                {pending.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Pendientes del mes</CardTitle>
+                        </CardHeader>
+                        <CardContent className="divide-y">
+                            {pending.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="flex items-center gap-3 py-2"
+                                >
+                                    <div className="flex-1">
+                                        <p className="font-medium">
+                                            {item.name}
+                                        </p>
+                                        <p className="text-sm text-muted-foreground">
+                                            {item.kind === 'fixed'
+                                                ? 'Gasto fijo'
+                                                : 'Suscripción'}{' '}
+                                            · {formatDate(item.due_date)}
+                                        </p>
+                                    </div>
+                                    {item.overdue && (
+                                        <Badge variant="destructive">
+                                            Vencido
+                                        </Badge>
+                                    )}
+                                    <span className="tabular-nums">
+                                        {formatMoney(
+                                            item.amount,
+                                            item.currency,
+                                        )}
+                                    </span>
+                                    <TransactionDialog
+                                        categories={categories}
+                                        payment={item}
+                                        trigger={
+                                            <Button variant="outline" size="sm">
+                                                <Receipt /> Registrar pago
+                                            </Button>
+                                        }
+                                    />
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <div className="flex items-center justify-between gap-4">
                     <h3 className="font-medium">Gráficos</h3>

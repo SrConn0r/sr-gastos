@@ -30,3 +30,20 @@ export type Paginated<T> = {
     prev_page_url: string | null;
     next_page_url: string | null;
 };
+
+export type RecurringKind = 'fixed' | 'subscription';
+
+export type RecurringExpense = {
+    id: number;
+    kind: RecurringKind;
+    name: string;
+    category_id: number;
+    category?: Pick<Category, 'id' | 'name'>;
+    amount: string;
+    currency: Currency;
+    frequency: 'monthly' | 'yearly';
+    day: number;
+    month: number | null;
+    active: boolean;
+    last_paid_on: string | null;
+};

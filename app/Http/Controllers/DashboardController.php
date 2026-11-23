@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\CategoryType;
 use App\Enums\Currency;
 use App\Models\Category;
+use App\Models\RecurringExpense;
 use App\Models\Transaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -83,12 +84,27 @@ class DashboardController extends Controller
             ];
         });
 
+        // Active bills and subscriptions due this month without a payment recorded this month.
+        $pending = RecurringExpense::where('active', true)
+            ->withMax('transactions as last_paid_on', 'date')
+            ->get()
+            ->filter(fn (RecurringExpense $item) => in_array($item->status(), ['pending', 'overdue'], true))
+            ->map(fn (RecurringExpense $item) => [
+                ...$item->toArray(),
+                'due_date' => $item->dueDateIn($thisMonth)?->toDateString(),
+                'overdue' => $item->status() === 'overdue',
+            ])
+            ->sortBy('due_date')
+            ->values();
+
         return Inertia::render('dashboard', [
             'currency' => $currency->value,
             'totals' => $totals,
             'budgets' => $budgets,
             'expensesByCategory' => $expensesByCategory,
             'monthly' => $monthly,
+            'pending' => $pending,
+            'categories' => Category::where('type', CategoryType::Expense)->orderBy('name')->get(['id', 'name', 'type']),
         ]);
     }
 }
