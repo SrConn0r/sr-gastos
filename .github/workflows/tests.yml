@@ -12,6 +12,10 @@ permissions:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # .env.example targets the local MySQL container; CI uses in-memory SQLite.
+    env:
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ':memory:'
 
     steps:
       - name: Checkout code
