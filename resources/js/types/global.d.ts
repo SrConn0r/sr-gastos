@@ -1,17 +1,18 @@
-import { PageProps as InertiaPageProps } from '@inertiajs/core';
-import { AxiosInstance } from 'axios';
-import { route as ziggyRoute } from 'ziggy-js';
-import { PageProps as AppPageProps } from './';
+import type { Auth } from '@/types/auth';
 
-declare global {
-    interface Window {
-        axios: AxiosInstance;
+declare module 'react' {
+    interface InputHTMLAttributes<T> {
+        passwordrules?: string;
     }
-
-    /* eslint-disable no-var */
-    var route: typeof ziggyRoute;
 }
 
 declare module '@inertiajs/core' {
-    interface PageProps extends InertiaPageProps, AppPageProps {}
+    export interface InertiaConfig {
+        sharedPageProps: {
+            name: string;
+            auth: Auth;
+            sidebarOpen: boolean;
+            [key: string]: unknown;
+        };
+    }
 }
