@@ -19,4 +19,4 @@ Artisan::command('inbound-emails:process', function (InboundEmailProcessor $proc
     $this->info("Procesados: {$emails->count()}");
 })->purpose('Registra con IA los correos bancarios pendientes');
 
-Schedule::command('inbound-emails:process')->hourly()->withoutOverlapping();
+Schedule::command('inbound-emails:process')->hourly()->withoutOverlapping(55);

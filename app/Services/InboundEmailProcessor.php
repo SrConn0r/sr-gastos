@@ -25,22 +25,39 @@ final class InboundEmailProcessor
 
     public function process(InboundEmail $email): void
     {
+        try {
+            $this->record($email);
+        } catch (AiException $e) {
+            $this->retryOrFail($email, $e->getMessage());
+        } catch (Throwable $e) {
+            // One poison email must not abort the rest of the hourly batch.
+            report($e);
+            $this->retryOrFail($email, Str::limit($e->getMessage(), 250));
+        }
+    }
+
+    private function retryOrFail(InboundEmail $email, string $error): void
+    {
+        $email->refresh(); // drop half-applied in-memory changes; saves only what we set below
+        if ($email->status !== InboundEmailStatus::Pending) {
+            return;
+        }
+
+        $email->attempts++;
+        $email->error = $error;
+        if ($email->attempts >= self::MAX_ATTEMPTS) {
+            $email->status = InboundEmailStatus::Failed;
+            $email->processed_at = now();
+        }
+        $email->save();
+    }
+
+    private function record(InboundEmail $email): void
+    {
         $accounts = Account::active()->orderBy('name')->get();
         $categories = Category::orderBy('type')->orderBy('name')->get();
 
-        try {
-            $result = ($this->categorize)($email, $accounts, $categories);
-        } catch (AiException $e) {
-            $email->attempts++;
-            $email->error = $e->getMessage();
-            if ($email->attempts >= self::MAX_ATTEMPTS) {
-                $email->status = InboundEmailStatus::Failed;
-                $email->processed_at = now();
-            }
-            $email->save();
-
-            return;
-        }
+        $result = ($this->categorize)($email, $accounts, $categories);
 
         $email->fill(['ai_result' => $result, 'error' => null, 'processed_at' => now()]);
 
@@ -58,7 +75,7 @@ final class InboundEmailProcessor
         }
 
         $amount = is_numeric($result['amount'] ?? null) ? round((float) $result['amount'], 2) : 0.0;
-        if ($amount <= 0) {
+        if (! is_finite($amount) || $amount <= 0 || $amount > 9_999_999_999) { // decimal(12,2)
             $email->fill(['status' => InboundEmailStatus::Failed, 'error' => 'Monto inválido en la respuesta de la IA.'])->save();
 
             return;
@@ -68,6 +85,8 @@ final class InboundEmailProcessor
 
         $account = $accounts->first(fn (Account $a) => $a->id === (int) ($result['account_id'] ?? 0));
         $review = $review || $account === null;
+        $currency = Currency::tryFrom((string) ($result['currency'] ?? '')) ?? $account->currency ?? Currency::COP;
+        $review = $review || $currency !== ($account->currency ?? $currency);
 
         $category = $categories->first(fn (Category $c) => $c->id === (int) ($result['category_id'] ?? 0) && $c->type === $type);
         if ($category === null) {
@@ -80,11 +99,11 @@ final class InboundEmailProcessor
 
         $title = trim((string) ($result['title'] ?? '')) ?: ($email->subject ?: 'Movimiento automático');
 
-        DB::transaction(function () use ($email, $result, $amount, $account, $category, $review, $title) {
+        DB::transaction(function () use ($email, $result, $amount, $currency, $account, $category, $review, $title) {
             Transaction::create([
                 'title' => Str::limit($title, 255, ''),
                 'amount' => $amount,
-                'currency' => Currency::tryFrom((string) ($result['currency'] ?? '')) ?? $account->currency ?? Currency::COP,
+                'currency' => $currency,
                 'date' => $this->date($result['date'] ?? null) ?? $email->received_at->toDateString(),
                 'category_id' => $category->id,
                 'account_id' => $account?->id,
@@ -111,6 +130,6 @@ final class InboundEmailProcessor
             return null;
         }
 
-        return ! $date || $date->isFuture() ? null : $date->toDateString();
+        return ! $date || $date->format('Y-m-d') !== $value || $date->isFuture() ? null : $date->toDateString();
     }
 }

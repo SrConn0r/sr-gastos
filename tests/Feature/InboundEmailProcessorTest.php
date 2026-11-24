@@ -147,3 +147,42 @@ it('retries AI errors and fails after three attempts', function () {
     processEmail();
     expect(processEmail())->status->toBe(InboundEmailStatus::Failed)->attempts->toBe(3);
 });
+
+it('retries unexpected errors and fails after three attempts', function () {
+    fakeAi(new RuntimeException('boom'));
+
+    expect(processEmail())->status->toBe(InboundEmailStatus::Pending)->attempts->toBe(1)->error->toBe('boom');
+    processEmail();
+    expect(processEmail())->status->toBe(InboundEmailStatus::Failed)->attempts->toBe(3);
+});
+
+it('fails an absurd amount', function (mixed $amount) {
+    fakeAi(aiAnswer(['amount' => $amount]));
+
+    expect(processEmail())->status->toBe(InboundEmailStatus::Failed)->error->toContain('Monto');
+    expect(Transaction::count())->toBe(0);
+})->with([[1e12], ['1e999']]);
+
+it('uses the email date when the AI date does not exist in the calendar', function () {
+    fakeAi(aiAnswer(['date' => '2026-02-31']));
+
+    processEmail();
+
+    expect(Transaction::sole()->date->toDateString())->toBe('2026-11-23');
+});
+
+it('flags review when the currency differs from the account currency', function () {
+    fakeAi(aiAnswer(['currency' => 'USD']));
+
+    processEmail();
+
+    expect(Transaction::sole())->currency->value->toBe('USD')->needs_review->toBeTrue();
+});
+
+it('uses the AI date when it is valid', function () {
+    fakeAi(aiAnswer(['date' => '2026-11-20']));
+
+    processEmail();
+
+    expect(Transaction::sole()->date->toDateString())->toBe('2026-11-20');
+});

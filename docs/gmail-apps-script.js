@@ -23,9 +23,12 @@ function sendBankEmails() {
         props.getProperty('APP_URL').replace(/\/$/, '') + '/api/inbound-emails';
     const token = props.getProperty('TOKEN');
     const lastSuccess = Number(props.getProperty('LAST_SUCCESS') || 0);
-    // One hour of overlap so an email that arrives during a run is never skipped.
-    const since = lastSuccess ? lastSuccess - 60 * 60 * 1000 : 0;
     const startedAt = Date.now();
+    // One hour of overlap so an email that arrives during a run is never skipped.
+    // First run: only the last 3 days (threads can hold months-old messages).
+    const since = lastSuccess
+        ? lastSuccess - 60 * 60 * 1000
+        : startedAt - 3 * 24 * 60 * 60 * 1000;
 
     const emails = [];
     GmailApp.search('label:' + LABEL + ' newer_than:3d').forEach(
@@ -35,8 +38,8 @@ function sendBankEmails() {
                 if (message.getDate().getTime() < since) return;
                 emails.push({
                     message_id: message.getId(),
-                    from: message.getFrom(),
-                    subject: message.getSubject(),
+                    from: message.getFrom().slice(0, 255),
+                    subject: message.getSubject().slice(0, 500),
                     date: message.getDate().toISOString(),
                     body: message.getPlainBody().slice(0, 100000),
                 });

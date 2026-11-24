@@ -324,25 +324,42 @@ export default function Transactions({
                                                         <span className="truncate">
                                                             {transaction.title}
                                                         </span>
+                                                    </span>
+                                                }
+                                                subtitle={
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="truncate">
+                                                            {[
+                                                                transaction
+                                                                    .category
+                                                                    .name,
+                                                                transaction
+                                                                    .account
+                                                                    ?.name,
+                                                                transaction.user
+                                                                    ?.name,
+                                                            ]
+                                                                .filter(Boolean)
+                                                                .join(' · ')}
+                                                        </span>
                                                         {transaction.inbound_email_id && (
-                                                            <Badge variant="secondary">
+                                                            <Badge
+                                                                variant="secondary"
+                                                                className="shrink-0"
+                                                            >
                                                                 Auto
                                                             </Badge>
                                                         )}
                                                         {transaction.needs_review && (
-                                                            <Badge variant="destructive">
+                                                            <Badge
+                                                                variant="destructive"
+                                                                className="shrink-0"
+                                                            >
                                                                 Por revisar
                                                             </Badge>
                                                         )}
                                                     </span>
                                                 }
-                                                subtitle={[
-                                                    transaction.category.name,
-                                                    transaction.account?.name,
-                                                    transaction.user?.name,
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' · ')}
                                                 value={
                                                     <span
                                                         className={cn(

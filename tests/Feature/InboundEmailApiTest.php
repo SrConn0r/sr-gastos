@@ -58,7 +58,6 @@ it('validates the payload', function (array $payload) {
         ->assertUnprocessable();
 })->with([
     'no emails' => [['emails' => []]],
-    'missing body' => [['emails' => [bankEmail(['body' => null])]]],
     'bad date' => [['emails' => [bankEmail(['date' => 'yesterday-ish'])]]],
     'body too long' => [['emails' => [bankEmail(['body' => str_repeat('a', 100_001)])]]],
 ]);
@@ -69,4 +68,12 @@ it('is unavailable when the owner does not exist', function () {
     $this->withToken('secret-token')
         ->postJson(route('api.inbound-emails.store'), ['emails' => [bankEmail()]])
         ->assertServiceUnavailable();
+});
+
+it('accepts an email without a body', function () {
+    $this->withToken('secret-token')
+        ->postJson(route('api.inbound-emails.store'), ['emails' => [bankEmail(['body' => null])]])
+        ->assertOk();
+
+    expect(InboundEmail::sole()->body)->toBe('');
 });

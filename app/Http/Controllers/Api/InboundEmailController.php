@@ -28,7 +28,7 @@ class InboundEmailController extends Controller
             'emails.*.from' => ['required', 'string', 'max:255'],
             'emails.*.subject' => ['nullable', 'string', 'max:500'],
             'emails.*.date' => ['required', 'date'],
-            'emails.*.body' => ['required', 'string', 'max:100000'],
+            'emails.*.body' => ['nullable', 'string', 'max:100000'],
         ]);
 
         $new = 0;
@@ -38,7 +38,7 @@ class InboundEmailController extends Controller
                 'from' => $email['from'],
                 'subject' => $email['subject'] ?? '',
                 'received_at' => Date::parse($email['date'])->setTimezone((string) config('app.timezone')),
-                'body' => $email['body'],
+                'body' => $email['body'] ?? '',
                 'status' => InboundEmailStatus::Pending,
             ]);
             $new += $stored->wasRecentlyCreated ? 1 : 0;

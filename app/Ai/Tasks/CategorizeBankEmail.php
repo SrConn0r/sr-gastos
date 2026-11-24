@@ -22,7 +22,7 @@ final class CategorizeBankEmail
 
         Fields:
         - amount: positive number. Colombian notation uses "." for thousands and "," for decimals: "$1.234.567,89" is 1234567.89.
-        - currency: COP unless the email clearly says USD or BRL.
+        - currency: COP, USD or BRL only when the email clearly states it; null when it does not say.
         - date: the operation date as YYYY-MM-DD, or null if the email has none.
         - title: a short label for the counterparty, e.g. "Restaurante El Corral" or "Pago de Acme SAS". No amounts.
         - account_id: the listed account the money left or arrived at, matched by institution, last 4 digits and kind. null if none matches. Never invent ids.

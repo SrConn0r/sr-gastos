@@ -65,13 +65,13 @@ class DashboardController extends Controller
 
         // One row per account and currency: an account without movements this month is left out.
         $byAccount = $month
-            ->groupBy(fn (Transaction $t) => ($t->account->name ?? 'Sin cuenta').'|'.$t->currency->value)
-            ->map(function (Collection $items, string $key) use ($sum) {
-                [$name, $code] = explode('|', $key);
+            ->groupBy(fn (Transaction $t) => ($t->account_id ?? 0).'|'.$t->currency->value)
+            ->map(function (Collection $items) use ($sum) {
+                $first = $items->first();
 
                 return [
-                    'name' => $name,
-                    'currency' => $code,
+                    'name' => $first->account->name ?? 'Sin cuenta',
+                    'currency' => $first->currency->value,
                     'income' => $sum($items, CategoryType::Income),
                     'expense' => $sum($items, CategoryType::Expense),
                 ];
