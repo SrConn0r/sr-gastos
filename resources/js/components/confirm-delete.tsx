@@ -24,8 +24,11 @@ export function ConfirmDelete({
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label={label}>
-                    <Trash2 />
+                <Button
+                    variant="ghost"
+                    className="w-full text-destructive-foreground hover:bg-destructive/10 hover:text-destructive-foreground"
+                >
+                    <Trash2 /> {label}
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>

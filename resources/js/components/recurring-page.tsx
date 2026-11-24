@@ -1,20 +1,12 @@
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus, Receipt } from 'lucide-react';
+import { CalendarClock, House, Plus, Receipt } from 'lucide-react';
 import { ConfirmDelete } from '@/components/confirm-delete';
 import Heading from '@/components/heading';
+import { ListRow } from '@/components/list-row';
 import { RecurringDialog } from '@/components/recurring-dialog';
 import { TransactionDialog } from '@/components/transaction-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { CURRENCIES, MONTHS, cn, formatDate, formatMoney } from '@/lib/utils';
+import { CURRENCIES, MONTHS, cn, formatMoney } from '@/lib/utils';
 import { destroy } from '@/routes/recurring-expenses';
 import type { Category, RecurringExpense, RecurringKind } from '@/types';
 
@@ -24,11 +16,11 @@ export type RecurringItem = RecurringExpense & {
 };
 
 const STATUS = {
-    paid: { label: 'Pagado este mes', variant: 'secondary' },
-    overdue: { label: 'Vencido', variant: 'destructive' },
-    pending: { label: 'Pendiente', variant: 'outline' },
-    scheduled: { label: 'Programado', variant: 'outline' },
-    inactive: { label: 'Inactivo', variant: 'outline' },
+    paid: { label: 'Pagado', tone: 'text-success' },
+    overdue: { label: 'Vencido', tone: 'text-destructive-foreground' },
+    pending: { label: 'Pendiente', tone: 'text-muted-foreground' },
+    scheduled: { label: 'Programado', tone: 'text-muted-foreground' },
+    inactive: { label: 'Inactivo', tone: 'text-muted-foreground' },
 } as const;
 
 export type RecurringPageProps = {
@@ -89,7 +81,7 @@ export function RecurringPage({
     return (
         <>
             <Head title={copy.title} />
-            <div className="flex flex-col gap-4 p-4">
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
                 <div className="flex items-start justify-between gap-4">
                     <Heading
                         title={copy.title}
@@ -107,143 +99,109 @@ export function RecurringPage({
                 </div>
 
                 {(monthly || yearly) && (
-                    <p className="text-sm text-muted-foreground">
-                        {monthly && (
-                            <>
-                                Total mensual:{' '}
-                                <span className="font-medium text-foreground">
-                                    {monthly}
-                                </span>
-                            </>
+                    <section className="grid grid-cols-2 gap-3 rounded-xl bg-primary p-5 text-primary-foreground">
+                        {[
+                            { label: 'Total mensual', value: monthly },
+                            { label: 'Total anual', value: yearly },
+                        ].map(
+                            (total) =>
+                                total.value && (
+                                    <div
+                                        key={total.label}
+                                        className="min-w-0 last:col-start-2 first:last:col-span-2 first:last:col-start-1"
+                                    >
+                                        <p className="text-sm font-semibold opacity-80">
+                                            {total.label}
+                                        </p>
+                                        <p className="text-xl font-bold tracking-tight tabular-nums">
+                                            {total.value}
+                                        </p>
+                                    </div>
+                                ),
                         )}
-                        {monthly && yearly && ' · '}
-                        {yearly && (
-                            <>
-                                Total anual:{' '}
-                                <span className="font-medium text-foreground">
-                                    {yearly}
-                                </span>
-                            </>
-                        )}
-                    </p>
+                    </section>
                 )}
 
-                <div className="overflow-hidden rounded-xl border">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Nombre</TableHead>
-                                <TableHead className="text-right">
-                                    Monto
-                                </TableHead>
-                                <TableHead>{copy.day}</TableHead>
-                                <TableHead className="hidden lg:table-cell">
-                                    Próximo
-                                </TableHead>
-                                <TableHead>Estado</TableHead>
-                                <TableHead />
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {items.map((item) => (
-                                <TableRow
-                                    key={item.id}
-                                    className={cn(
-                                        !item.active && 'text-muted-foreground',
-                                    )}
-                                >
-                                    <TableCell>
-                                        <p className="font-medium">
-                                            {item.name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                            {item.category?.name}
-                                        </p>
-                                    </TableCell>
-                                    <TableCell className="text-right tabular-nums">
-                                        {kind === 'fixed' && '≈ '}
-                                        {formatMoney(
-                                            item.amount,
-                                            item.currency,
-                                        )}
-                                    </TableCell>
-                                    <TableCell>
-                                        {item.frequency === 'yearly'
+                <div className="flex flex-col gap-2">
+                    {items.map((item) => (
+                        <RecurringDialog
+                            key={item.id}
+                            kind={kind}
+                            categories={categories}
+                            item={item}
+                            footer={
+                                <ConfirmDelete
+                                    label="Eliminar"
+                                    description="Los pagos ya registrados se conservan en Movimientos."
+                                    onConfirm={() =>
+                                        router.delete(destroy.url(item.id), {
+                                            preserveScroll: true,
+                                        })
+                                    }
+                                />
+                            }
+                            trigger={
+                                <ListRow
+                                    className={cn(!item.active && 'opacity-60')}
+                                    icon={
+                                        kind === 'fixed' ? (
+                                            <House />
+                                        ) : (
+                                            <CalendarClock />
+                                        )
+                                    }
+                                    title={item.name}
+                                    subtitle={
+                                        item.frequency === 'yearly'
                                             ? `${item.day} de ${MONTHS[(item.month ?? 1) - 1]}`
-                                            : `Día ${item.day}`}
-                                    </TableCell>
-                                    <TableCell className="hidden lg:table-cell">
-                                        {item.active
-                                            ? formatDate(item.next_due_date)
-                                            : '—'}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Badge
-                                            variant={
-                                                STATUS[item.status].variant
-                                            }
-                                        >
-                                            {STATUS[item.status].label}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right whitespace-nowrap">
-                                        {item.active && (
+                                            : `${copy.day} día ${item.day}`
+                                    }
+                                    value={
+                                        <>
+                                            <span className="block font-semibold">
+                                                {kind === 'fixed' && '≈ '}
+                                                {formatMoney(
+                                                    item.amount,
+                                                    item.currency,
+                                                )}
+                                            </span>
+                                            <span
+                                                className={cn(
+                                                    'text-xs font-medium',
+                                                    STATUS[item.status].tone,
+                                                )}
+                                            >
+                                                {STATUS[item.status].label}
+                                            </span>
+                                        </>
+                                    }
+                                    action={
+                                        item.active && (
                                             <TransactionDialog
                                                 categories={categories}
                                                 payment={item}
                                                 trigger={
                                                     <Button
-                                                        variant="ghost"
+                                                        variant="secondary"
                                                         size="icon"
-                                                        aria-label="Registrar pago"
+                                                        aria-label={`Registrar pago de ${item.name}`}
                                                         title="Registrar pago"
                                                     >
                                                         <Receipt />
                                                     </Button>
                                                 }
                                             />
-                                        )}
-                                        <RecurringDialog
-                                            kind={kind}
-                                            categories={categories}
-                                            item={item}
-                                            trigger={
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    aria-label="Editar"
-                                                >
-                                                    <Pencil />
-                                                </Button>
-                                            }
-                                        />
-                                        <ConfirmDelete
-                                            label="Eliminar"
-                                            description="Los pagos ya registrados se conservan en Movimientos."
-                                            onConfirm={() =>
-                                                router.delete(
-                                                    destroy.url(item.id),
-                                                    {
-                                                        preserveScroll: true,
-                                                    },
-                                                )
-                                            }
-                                        />
-                                    </TableCell>
-                                </TableRow>
-                            ))}
-                            {items.length === 0 && (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={6}
-                                        className="h-24 text-center text-muted-foreground"
-                                    >
-                                        {copy.empty}
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                        )
+                                    }
+                                />
+                            }
+                        />
+                    ))}
+                    {items.length === 0 && (
+                        <p className="py-16 text-center text-muted-foreground">
+                            {copy.empty}
+                        </p>
+                    )}
                 </div>
             </div>
         </>

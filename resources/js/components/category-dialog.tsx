@@ -28,9 +28,11 @@ import type { Category, CategoryType } from '@/types';
 type Props = {
     category?: Category;
     trigger: ReactNode;
+    /** Extra actions under the form, e.g. a delete button. */
+    footer?: ReactNode;
 };
 
-export function CategoryDialog({ category, trigger }: Props) {
+export function CategoryDialog({ category, trigger, footer }: Props) {
     const [open, setOpen] = useState(false);
 
     return (
@@ -46,6 +48,7 @@ export function CategoryDialog({ category, trigger }: Props) {
                     category={category}
                     onSuccess={() => setOpen(false)}
                 />
+                {footer}
             </DialogContent>
         </Dialog>
     );

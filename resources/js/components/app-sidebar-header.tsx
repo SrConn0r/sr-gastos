@@ -1,5 +1,15 @@
+import { Link, usePage } from '@inertiajs/react';
+import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { UserInfo } from '@/components/user-info';
+import { UserMenuContent } from '@/components/user-menu-content';
+import { dashboard } from '@/routes';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({
@@ -7,9 +17,35 @@ export function AppSidebarHeader({
 }: {
     breadcrumbs?: BreadcrumbItemType[];
 }) {
+    const { auth, name } = usePage().props;
+
     return (
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b border-sidebar-border/50 px-6 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 md:px-4">
-            <div className="flex items-center gap-2">
+        <header className="sticky top-0 z-30 flex shrink-0 items-center gap-2 bg-background/70 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:static md:h-14 md:bg-transparent md:backdrop-blur-none">
+            <div className="flex h-14 flex-1 items-center gap-2 md:hidden">
+                <Link
+                    href={dashboard()}
+                    className="flex items-center gap-2 font-bold"
+                >
+                    <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
+                        <AppLogoIcon className="size-5 fill-current" />
+                    </span>
+                    {name}
+                </Link>
+                {auth.user && (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger
+                            className="ml-auto rounded-full"
+                            aria-label="Menú de usuario"
+                        >
+                            <UserInfo user={auth.user} avatarOnly />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-60">
+                            <UserMenuContent user={auth.user} />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
+            </div>
+            <div className="hidden items-center gap-2 md:flex">
                 <SidebarTrigger className="-ml-1" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>

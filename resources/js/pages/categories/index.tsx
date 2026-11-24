@@ -1,10 +1,10 @@
 import { Head, router } from '@inertiajs/react';
-import { Pencil, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { CategoryDialog } from '@/components/category-dialog';
 import { ConfirmDelete } from '@/components/confirm-delete';
 import Heading from '@/components/heading';
+import { ListLabel, ListRow } from '@/components/list-row';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatMoney } from '@/lib/utils';
 import { destroy, index } from '@/routes/categories';
 import type { Category } from '@/types';
@@ -18,7 +18,7 @@ export default function Categories({ categories }: { categories: Category[] }) {
     return (
         <>
             <Head title="Categorías" />
-            <div className="flex flex-col gap-4 p-4">
+            <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
                 <div className="flex items-start justify-between gap-4">
                     <Heading
                         title="Categorías"
@@ -35,46 +35,21 @@ export default function Categories({ categories }: { categories: Category[] }) {
 
                 <div className="grid gap-4 lg:grid-cols-2">
                     {SECTIONS.map((section) => (
-                        <Card key={section.type}>
-                            <CardHeader>
-                                <CardTitle>{section.title}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="divide-y">
-                                {categories
-                                    .filter(
-                                        (category) =>
-                                            category.type === section.type,
-                                    )
-                                    .map((category) => (
-                                        <div
-                                            key={category.id}
-                                            className="flex items-center gap-2 py-2"
-                                        >
-                                            <div className="flex-1">
-                                                <p className="font-medium">
-                                                    {category.name}
-                                                </p>
-                                                <p className="text-sm text-muted-foreground">
-                                                    {
-                                                        category.transactions_count
-                                                    }{' '}
-                                                    movimientos
-                                                    {category.budget !== null &&
-                                                        ` · Presupuesto ${formatMoney(category.budget, category.budget_currency)}`}
-                                                </p>
-                                            </div>
-                                            <CategoryDialog
-                                                category={category}
-                                                trigger={
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        aria-label="Editar categoría"
-                                                    >
-                                                        <Pencil />
-                                                    </Button>
-                                                }
-                                            />
+                        <section
+                            key={section.type}
+                            className="flex flex-col gap-2"
+                        >
+                            <ListLabel>{section.title}</ListLabel>
+                            {categories
+                                .filter(
+                                    (category) =>
+                                        category.type === section.type,
+                                )
+                                .map((category) => (
+                                    <CategoryDialog
+                                        key={category.id}
+                                        category={category}
+                                        footer={
                                             <ConfirmDelete
                                                 label="Eliminar categoría"
                                                 description="Solo se pueden eliminar categorías sin movimientos."
@@ -89,10 +64,35 @@ export default function Categories({ categories }: { categories: Category[] }) {
                                                     )
                                                 }
                                             />
-                                        </div>
-                                    ))}
-                            </CardContent>
-                        </Card>
+                                        }
+                                        trigger={
+                                            <ListRow
+                                                icon={category.name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
+                                                title={category.name}
+                                                subtitle={`${category.transactions_count} movimientos`}
+                                                value={
+                                                    category.budget !==
+                                                        null && (
+                                                        <>
+                                                            <span className="block text-xs text-muted-foreground">
+                                                                Presupuesto
+                                                            </span>
+                                                            <span className="font-semibold">
+                                                                {formatMoney(
+                                                                    category.budget,
+                                                                    category.budget_currency,
+                                                                )}
+                                                            </span>
+                                                        </>
+                                                    )
+                                                }
+                                            />
+                                        }
+                                    />
+                                ))}
+                        </section>
                     ))}
                 </div>
             </div>

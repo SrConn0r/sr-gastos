@@ -1,9 +1,15 @@
 import { Head, router } from '@inertiajs/react';
-import { Receipt } from 'lucide-react';
+import {
+    ArrowDownLeft,
+    ArrowUpRight,
+    CalendarClock,
+    House,
+    Plus,
+} from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import Heading from '@/components/heading';
+import { ListLabel, ListRow } from '@/components/list-row';
 import { TransactionDialog } from '@/components/transaction-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -24,7 +30,7 @@ import {
 import {
     CURRENCIES,
     cn,
-    formatDate,
+    formatDay,
     formatMonth,
     formatMoney,
 } from '@/lib/utils';
@@ -52,11 +58,10 @@ type Props = {
     categories: Pick<Category, 'id' | 'name' | 'type'>[];
 };
 
-// Validated (light + dark) for CVD separation and contrast.
 const chartConfig = {
-    income: { label: 'Ingresos', color: '#009689' },
-    expense: { label: 'Gastos', color: '#f54a00' },
-    total: { label: 'Gastado', color: '#f54a00' },
+    income: { label: 'Ingresos', color: 'var(--chart-1)' },
+    expense: { label: 'Gastos', color: 'var(--chart-5)' },
+    total: { label: 'Gastado', color: 'var(--chart-5)' },
 } satisfies ChartConfig;
 
 const compact = new Intl.NumberFormat('es-CO', { notation: 'compact' });
@@ -74,35 +79,75 @@ export default function Dashboard({
         ? totals
         : [{ currency: 'COP' as Currency, income: 0, expense: 0, balance: 0 }];
     const tiles = [
-        { key: 'income', title: 'Ingresos del mes' },
-        { key: 'expense', title: 'Gastos del mes' },
-        { key: 'balance', title: 'Balance del mes' },
+        {
+            key: 'income',
+            title: 'Ingresos',
+            icon: ArrowDownLeft,
+            tone: 'bg-accent text-success',
+        },
+        {
+            key: 'expense',
+            title: 'Gastos',
+            icon: ArrowUpRight,
+            tone: 'bg-destructive/10 text-destructive-foreground',
+        },
     ] as const;
+    const [main, ...others] = rows;
 
     return (
         <>
             <Head title="Inicio" />
-            <div className="flex flex-col gap-4 p-4">
+            <div className="mx-auto flex w-full max-w-5xl flex-col gap-4 p-4">
                 <Heading title="Inicio" description="Resumen del mes actual" />
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <section className="relative overflow-hidden rounded-xl bg-primary p-6 text-primary-foreground">
+                    <div
+                        aria-hidden
+                        className="absolute -top-16 -right-10 size-48 rounded-full bg-white/25 blur-2xl"
+                    />
+                    <p className="relative text-sm font-semibold opacity-80">
+                        Balance del mes
+                    </p>
+                    <p className="relative mt-1 text-4xl font-bold tracking-tight tabular-nums">
+                        {formatMoney(main.balance, main.currency)}
+                    </p>
+                    {others.map((row) => (
+                        <p
+                            key={row.currency}
+                            className="relative text-lg font-semibold tabular-nums opacity-80"
+                        >
+                            {formatMoney(row.balance, row.currency)}
+                        </p>
+                    ))}
+                    <TransactionDialog
+                        categories={categories}
+                        trigger={
+                            <Button variant="ink" className="relative mt-5">
+                                <Plus /> Registrar movimiento
+                            </Button>
+                        }
+                    />
+                </section>
+
+                <div className="grid grid-cols-2 gap-3">
                     {tiles.map((tile) => (
-                        <Card key={tile.key}>
-                            <CardHeader>
-                                <CardTitle className="text-sm font-medium text-muted-foreground">
+                        <Card key={tile.key} className="gap-3 py-4">
+                            <CardContent className="space-y-2 px-4">
+                                <span
+                                    className={cn(
+                                        'grid size-9 place-items-center rounded-full [&_svg]:size-4',
+                                        tile.tone,
+                                    )}
+                                >
+                                    <tile.icon />
+                                </span>
+                                <p className="text-sm text-muted-foreground">
                                     {tile.title}
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-1">
+                                </p>
                                 {rows.map((row) => (
                                     <p
                                         key={row.currency}
-                                        className={cn(
-                                            'text-2xl font-semibold tabular-nums',
-                                            tile.key === 'balance' &&
-                                                row.balance < 0 &&
-                                                'text-destructive',
-                                        )}
+                                        className="truncate text-lg font-bold tabular-nums"
                                     >
                                         {formatMoney(
                                             row[tile.key],
@@ -116,55 +161,58 @@ export default function Dashboard({
                 </div>
 
                 {pending.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Pendientes del mes</CardTitle>
-                        </CardHeader>
-                        <CardContent className="divide-y">
-                            {pending.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex items-center gap-3 py-2"
-                                >
-                                    <div className="flex-1">
-                                        <p className="font-medium">
-                                            {item.name}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
-                                            {item.kind === 'fixed'
-                                                ? 'Gasto fijo'
-                                                : 'Suscripción'}{' '}
-                                            · {formatDate(item.due_date)}
-                                        </p>
-                                    </div>
-                                    {item.overdue && (
-                                        <Badge variant="destructive">
-                                            Vencido
-                                        </Badge>
-                                    )}
-                                    <span className="tabular-nums">
-                                        {formatMoney(
-                                            item.amount,
-                                            item.currency,
-                                        )}
-                                    </span>
-                                    <TransactionDialog
-                                        categories={categories}
-                                        payment={item}
-                                        trigger={
-                                            <Button variant="outline" size="sm">
-                                                <Receipt /> Registrar pago
-                                            </Button>
+                    <section className="space-y-2">
+                        <ListLabel>Pendientes del mes</ListLabel>
+                        {pending.map((item) => (
+                            <TransactionDialog
+                                key={item.id}
+                                categories={categories}
+                                payment={item}
+                                trigger={
+                                    <ListRow
+                                        icon={
+                                            item.kind === 'fixed' ? (
+                                                <House />
+                                            ) : (
+                                                <CalendarClock />
+                                            )
+                                        }
+                                        title={item.name}
+                                        subtitle={`${item.kind === 'fixed' ? 'Gasto fijo' : 'Suscripción'} · ${formatDay(item.due_date)}`}
+                                        aria-label={`Registrar pago de ${item.name}`}
+                                        value={
+                                            <>
+                                                <span className="block font-semibold">
+                                                    {formatMoney(
+                                                        item.amount,
+                                                        item.currency,
+                                                    )}
+                                                </span>
+                                                <span
+                                                    className={cn(
+                                                        'text-xs font-medium',
+                                                        item.overdue
+                                                            ? 'text-destructive-foreground'
+                                                            : 'text-muted-foreground',
+                                                    )}
+                                                >
+                                                    {item.overdue
+                                                        ? 'Vencido'
+                                                        : 'Pendiente'}
+                                                </span>
+                                            </>
                                         }
                                     />
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
+                                }
+                            />
+                        ))}
+                    </section>
                 )}
 
-                <div className="flex items-center justify-between gap-4">
-                    <h3 className="font-medium">Gráficos</h3>
+                <div className="flex items-center justify-between gap-4 pt-2">
+                    <h3 className="px-1 text-sm font-semibold text-muted-foreground">
+                        Gráficos
+                    </h3>
                     <Select
                         value={currency}
                         onValueChange={(value) =>
@@ -235,7 +283,7 @@ export default function Dashboard({
                                         <Bar
                                             dataKey="total"
                                             fill="var(--color-total)"
-                                            radius={[0, 4, 4, 0]}
+                                            radius={[0, 8, 8, 0]}
                                             barSize={20}
                                         />
                                     </BarChart>
@@ -290,12 +338,12 @@ export default function Dashboard({
                                     <Bar
                                         dataKey="income"
                                         fill="var(--color-income)"
-                                        radius={[4, 4, 0, 0]}
+                                        radius={[6, 6, 0, 0]}
                                     />
                                     <Bar
                                         dataKey="expense"
                                         fill="var(--color-expense)"
-                                        radius={[4, 4, 0, 0]}
+                                        radius={[6, 6, 0, 0]}
                                     />
                                 </BarChart>
                             </ChartContainer>

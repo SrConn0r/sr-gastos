@@ -25,7 +25,7 @@ import { index as subscriptions } from '@/routes/subscriptions';
 import { index as transactions } from '@/routes/transactions';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
+export const mainNavItems: NavItem[] = [
     { title: 'Inicio', href: dashboard(), icon: LayoutGrid },
     { title: 'Movimientos', href: transactions(), icon: ArrowLeftRight },
     { title: 'Gastos fijos', href: fixedExpenses(), icon: House },
@@ -35,7 +35,7 @@ const mainNavItems: NavItem[] = [
 
 export function AppSidebar() {
     return (
-        <Sidebar collapsible="icon" variant="inset">
+        <Sidebar collapsible="icon" variant="floating">
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>

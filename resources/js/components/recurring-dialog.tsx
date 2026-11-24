@@ -31,9 +31,17 @@ type Props = {
     categories: Pick<Category, 'id' | 'name'>[];
     item?: RecurringExpense;
     trigger: ReactNode;
+    /** Extra actions under the form, e.g. a delete button. */
+    footer?: ReactNode;
 };
 
-export function RecurringDialog({ kind, categories, item, trigger }: Props) {
+export function RecurringDialog({
+    kind,
+    categories,
+    item,
+    trigger,
+    footer,
+}: Props) {
     const [open, setOpen] = useState(false);
     const title = item
         ? `Editar ${kind === 'fixed' ? 'gasto fijo' : 'suscripción'}`
@@ -54,6 +62,7 @@ export function RecurringDialog({ kind, categories, item, trigger }: Props) {
                     item={item}
                     onSuccess={() => setOpen(false)}
                 />
+                {footer}
             </DialogContent>
         </Dialog>
     );
@@ -64,7 +73,7 @@ function RecurringForm({
     categories,
     item,
     onSuccess,
-}: Omit<Props, 'trigger'> & { onSuccess: () => void }) {
+}: Omit<Props, 'trigger' | 'footer'> & { onSuccess: () => void }) {
     const [frequency, setFrequency] = useState(item?.frequency ?? 'monthly');
 
     return (

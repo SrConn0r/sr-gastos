@@ -37,6 +37,8 @@ type Props = {
     /** Prefills a new expense, e.g. the payment of a fixed bill or subscription. */
     payment?: RecurringExpense;
     trigger: ReactNode;
+    /** Extra actions under the form, e.g. a delete button. */
+    footer?: ReactNode;
 };
 
 export function TransactionDialog({
@@ -44,6 +46,7 @@ export function TransactionDialog({
     transaction,
     payment,
     trigger,
+    footer,
 }: Props) {
     const [open, setOpen] = useState(false);
 
@@ -66,6 +69,7 @@ export function TransactionDialog({
                     payment={payment}
                     onSuccess={() => setOpen(false)}
                 />
+                {footer}
             </DialogContent>
         </Dialog>
     );
@@ -76,7 +80,7 @@ function TransactionForm({
     transaction,
     payment,
     onSuccess,
-}: Omit<Props, 'trigger'> & { onSuccess: () => void }) {
+}: Omit<Props, 'trigger' | 'footer'> & { onSuccess: () => void }) {
     const [type, setType] = useState<CategoryType>(
         transaction?.category.type ?? 'expense',
     );

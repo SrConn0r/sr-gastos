@@ -24,6 +24,14 @@ export function formatMoney(
     }).format(Number(amount));
 }
 
+/** Short day label without year, e.g. "5 dic". */
+export function formatDay(date: string): string {
+    return new Date(`${date}T00:00:00`).toLocaleDateString('es-CO', {
+        day: 'numeric',
+        month: 'short',
+    });
+}
+
 export function formatDate(date: string): string {
     // Dates arrive as Y-m-d; parse as local midnight so the day never shifts.
     return new Date(`${date}T00:00:00`).toLocaleDateString('es-CO', {
