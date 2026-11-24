@@ -70,6 +70,7 @@ export default defineConfig({
             '.cursor/**',
             '.github/**',
             'composer.json',
+            'public/**',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
         ],
