@@ -20,6 +20,7 @@ use Illuminate\Support\Carbon;
  * @property string $amount
  * @property Currency $currency
  * @property Carbon $date
+ * @property bool $needs_review
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Category $category
@@ -27,7 +28,7 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $user
  * @property-read RecurringExpense|null $recurringExpense
  */
-#[Fillable(['title', 'amount', 'currency', 'date', 'category_id', 'account_id', 'user_id', 'recurring_expense_id'])]
+#[Fillable(['title', 'amount', 'currency', 'date', 'needs_review', 'category_id', 'account_id', 'user_id', 'recurring_expense_id'])]
 class Transaction extends Model
 {
     /** @use HasFactory<TransactionFactory> */
@@ -40,6 +41,7 @@ class Transaction extends Model
             'amount' => 'decimal:2',
             'currency' => Currency::class,
             'date' => 'date:Y-m-d',
+            'needs_review' => 'boolean',
         ];
     }
 

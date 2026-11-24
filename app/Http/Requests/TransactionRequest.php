@@ -17,6 +17,7 @@ class TransactionRequest extends FormRequest
             'currency' => ['required', Rule::enum(Currency::class)],
             'date' => ['required', 'date', 'before_or_equal:today'],
             'category_id' => ['required', 'exists:categories,id'],
+            'account_id' => ['nullable', 'exists:accounts,id'],
             'recurring_expense_id' => ['nullable', 'exists:recurring_expenses,id'],
         ];
     }

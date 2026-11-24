@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
@@ -79,4 +80,48 @@ it('renders the movements page', function () {
         ->component('transactions/index')
         ->has('categories')
         ->has('transactions.data'));
+});
+
+it('stores the account of a movement', function () {
+    $category = Category::factory()->create();
+    $account = Account::factory()->create();
+
+    $this->post(route('transactions.store'), [
+        'title' => 'Lunch', 'amount' => 10, 'currency' => 'COP', 'date' => '2026-11-20',
+        'category_id' => $category->id, 'account_id' => $account->id,
+    ])->assertSessionHasNoErrors();
+
+    expect(Transaction::sole()->account_id)->toBe($account->id);
+});
+
+it('rejects unknown accounts', function () {
+    $category = Category::factory()->create();
+
+    $this->post(route('transactions.store'), [
+        'title' => 'Lunch', 'amount' => 10, 'currency' => 'COP', 'date' => '2026-11-20',
+        'category_id' => $category->id, 'account_id' => 999,
+    ])->assertSessionHasErrors('account_id');
+});
+
+it('clears the review flag when a movement is edited', function () {
+    $transaction = Transaction::factory()->create(['needs_review' => true]);
+
+    $this->put(route('transactions.update', $transaction), [
+        'title' => 'Fixed', 'amount' => 10, 'currency' => 'COP', 'date' => '2026-11-20', 'category_id' => $transaction->category_id,
+    ])->assertSessionHasNoErrors();
+
+    expect($transaction->fresh()->needs_review)->toBeFalse();
+});
+
+it('filters movements by account and by review flag', function () {
+    $account = Account::factory()->create();
+    $inAccount = Transaction::factory()->create(['account_id' => $account->id]);
+    $toReview = Transaction::factory()->create(['needs_review' => true]);
+    Transaction::factory()->create();
+
+    $this->get(route('transactions.index', ['account' => $account->id]))
+        ->assertInertia(fn (Assert $page) => $page->has('transactions.data', 1)->where('transactions.data.0.id', $inAccount->id));
+
+    $this->get(route('transactions.index', ['review' => 1]))
+        ->assertInertia(fn (Assert $page) => $page->has('transactions.data', 1)->where('transactions.data.0.id', $toReview->id)->has('accounts', 1));
 });
