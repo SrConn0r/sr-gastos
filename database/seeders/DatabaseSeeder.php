@@ -14,9 +14,32 @@ class DatabaseSeeder extends Seeder
     use WithoutModelEvents;
 
     /**
-     * Local demo data: one user, a few categories and a year of movements.
+     * Creates the household owner from config('app.owner'); in local also adds demo data.
+     * Safe to re-run: the owner is matched by email and demo data is never seeded elsewhere.
      */
     public function run(): void
+    {
+        $owner = config('app.owner');
+
+        if ($owner['email'] && $owner['password']) {
+            User::firstOrNew(['email' => $owner['email']])
+                ->forceFill([
+                    'name' => $owner['name'],
+                    'password' => $owner['password'],
+                    'email_verified_at' => now(),
+                ])
+                ->save();
+        } else {
+            $this->command?->warn('OWNER_EMAIL / OWNER_PASSWORD not set: skipping the household owner.');
+        }
+
+        if (app()->isLocal() && User::where('email', 'test@example.com')->doesntExist()) {
+            $this->demo();
+        }
+    }
+
+    /** One demo user, a few categories, bills, subscriptions and a year of movements. */
+    private function demo(): void
     {
         $user = User::factory()->create([
             'name' => 'Test User',

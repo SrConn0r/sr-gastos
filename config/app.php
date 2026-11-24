@@ -16,6 +16,16 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Household account created or updated by `php artisan db:seed`.
+    | Keep the password in .env only; it never belongs in git.
+    */
+    'owner' => [
+        'name' => env('OWNER_NAME', 'SrConnor'),
+        'email' => env('OWNER_EMAIL'),
+        'password' => env('OWNER_PASSWORD'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
