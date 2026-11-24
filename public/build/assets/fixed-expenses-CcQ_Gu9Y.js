@@ -1,1 +1,0 @@
-import{m as e,p as t}from"./wayfinder-CeJnauHC.js";import{t as n}from"./recurring-page-DUp15l62.js";import{d as r}from"./app-CvoG6bni.js";var i=e(),a=t();function o(e){let t=(0,i.c)(2),r;return t[0]===e?r=t[1]:(r=(0,a.jsx)(n,{kind:`fixed`,...e}),t[0]=e,t[1]=r),r}o.layout={breadcrumbs:[{title:`Gastos fijos`,href:r()}]};export{o as default};

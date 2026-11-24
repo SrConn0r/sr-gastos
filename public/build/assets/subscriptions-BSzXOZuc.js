@@ -1,0 +1,1 @@
+import{m as e,p as t}from"./wayfinder-CeJnauHC.js";import{t as n}from"./recurring-page-C3p8B2mM.js";import{d as r}from"./app-1bxochOn.js";var i=e(),a=t();function o(e){let t=(0,i.c)(2),r;return t[0]===e?r=t[1]:(r=(0,a.jsx)(n,{kind:`subscription`,...e}),t[0]=e,t[1]=r),r}o.layout={breadcrumbs:[{title:`Suscripciones`,href:r()}]};export{o as default};

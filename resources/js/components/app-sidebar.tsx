@@ -29,15 +29,18 @@ import { index as subscriptions } from '@/routes/subscriptions';
 import { index as transactions } from '@/routes/transactions';
 import type { NavItem } from '@/types';
 
+/** The first MOBILE_TABS items are bottom-nav tabs; the rest go under "Más". */
 export const mainNavItems: NavItem[] = [
     { title: 'Inicio', href: dashboard(), icon: LayoutGrid },
     { title: 'Movimientos', href: transactions(), icon: ArrowLeftRight },
+    { title: 'Cuentas', href: accounts(), icon: Landmark },
     { title: 'Gastos fijos', href: fixedExpenses(), icon: House },
     { title: 'Suscripciones', href: subscriptions(), icon: CalendarClock },
     { title: 'Categorías', href: categories(), icon: Tags },
-    { title: 'Cuentas', href: accounts(), icon: Landmark },
     { title: 'Correos', href: inboundEmails(), icon: Mail },
 ];
+
+export const MOBILE_TABS = 3;
 
 export function AppSidebar() {
     return (

@@ -1,15 +1,10 @@
 import { Link, usePage } from '@inertiajs/react';
 import AppLogoIcon from '@/components/app-logo-icon';
 import { Breadcrumbs } from '@/components/breadcrumbs';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserInfo } from '@/components/user-info';
-import { UserMenuContent } from '@/components/user-menu-content';
 import { dashboard } from '@/routes';
+import { edit as editProfile } from '@/routes/profile';
 import type { BreadcrumbItem as BreadcrumbItemType } from '@/types';
 
 export function AppSidebarHeader({
@@ -32,17 +27,14 @@ export function AppSidebarHeader({
                     {name}
                 </Link>
                 {auth.user && (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger
-                            className="ml-auto rounded-full"
-                            aria-label="Menú de usuario"
-                        >
-                            <UserInfo user={auth.user} avatarOnly />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-60">
-                            <UserMenuContent user={auth.user} />
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <Link
+                        href={editProfile()}
+                        prefetch
+                        className="ml-auto rounded-full"
+                        aria-label="Mi perfil"
+                    >
+                        <UserInfo user={auth.user} avatarOnly />
+                    </Link>
                 )}
             </div>
             <div className="hidden items-center gap-2 md:flex">

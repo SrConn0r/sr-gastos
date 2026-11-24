@@ -1,19 +1,22 @@
-import { Form, Head, usePage } from '@inertiajs/react';
-import { Link } from '@inertiajs/react';
+import { Form, Head, Link, router, usePage } from '@inertiajs/react';
+import { Camera, LogOut, Palette, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
 import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
 import DeleteUser from '@/components/delete-user';
-import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
+import { LinkRow } from '@/components/list-row';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
+import { useInitials } from '@/hooks/use-initials';
+import { logout } from '@/routes';
+import { edit as editAppearance } from '@/routes/appearance';
 import { edit } from '@/routes/profile';
-import type { Auth } from '@/types';
+import { edit as editSecurity } from '@/routes/security';
 import { send } from '@/routes/verification';
-
-type PageProps = {
-    auth: Auth;
-};
 
 export default function Profile({
     mustVerifyEmail,
@@ -22,106 +25,190 @@ export default function Profile({
     mustVerifyEmail: boolean;
     status?: string;
 }) {
-    const { auth } = usePage<PageProps>().props;
+    const { auth, errors } = usePage().props;
+    const user = auth.user;
+    const getInitials = useInitials();
+    const [uploading, setUploading] = useState(false);
+
+    const uploadAvatar = (file?: File) => {
+        if (!file) {
+            return;
+        }
+
+        router.post(
+            ProfileController.updateAvatar.url(),
+            { avatar: file },
+            {
+                forceFormData: true,
+                preserveScroll: true,
+                onStart: () => setUploading(true),
+                onFinish: () => setUploading(false),
+            },
+        );
+    };
 
     return (
         <>
-            <Head title="Profile settings" />
+            <Head title="Perfil" />
+            <h1 className="sr-only">Perfil</h1>
 
-            <h1 className="sr-only">Profile settings</h1>
+            <section className="flex flex-col items-center gap-3 rounded-xl border border-transparent bg-card p-6 text-center shadow-soft dark:border-border dark:shadow-none">
+                <div className="relative">
+                    <Avatar className="size-24 text-2xl">
+                        <AvatarImage
+                            src={user.avatar}
+                            alt={user.name}
+                            className="object-cover"
+                        />
+                        <AvatarFallback className="bg-accent font-bold text-accent-foreground">
+                            {getInitials(user.name)}
+                        </AvatarFallback>
+                    </Avatar>
+                    <label className="absolute -right-1 -bottom-1 grid size-9 cursor-pointer place-items-center rounded-full border-2 border-card bg-foreground text-background transition-transform focus-within:ring-4 focus-within:ring-ring/25 active:scale-95">
+                        {uploading ? (
+                            <Spinner className="size-4" />
+                        ) : (
+                            <Camera className="size-4" />
+                        )}
+                        <span className="sr-only">Cambiar foto</span>
+                        <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="sr-only"
+                            disabled={uploading}
+                            onChange={(event) => {
+                                uploadAvatar(event.target.files?.[0]);
+                                event.target.value = '';
+                            }}
+                        />
+                    </label>
+                </div>
+                <div className="min-w-0">
+                    <p className="truncate text-xl font-bold">{user.name}</p>
+                    <p className="truncate text-sm text-muted-foreground">
+                        {user.email}
+                    </p>
+                </div>
+                {user.avatar && (
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                            router.delete(
+                                ProfileController.destroyAvatar.url(),
+                                {
+                                    preserveScroll: true,
+                                },
+                            )
+                        }
+                    >
+                        Quitar foto
+                    </Button>
+                )}
+                <InputError message={errors.avatar} />
+            </section>
 
-            <div className="space-y-6">
-                <Heading
-                    variant="small"
-                    title="Profile"
-                    description="Update your name and email address"
-                />
+            <Card>
+                <CardHeader>
+                    <CardTitle>Información personal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Form
+                        {...ProfileController.update.form()}
+                        options={{ preserveScroll: true }}
+                        className="space-y-4"
+                    >
+                        {({ processing, errors }) => (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="name">Nombre</Label>
+                                    <Input
+                                        id="name"
+                                        defaultValue={user.name}
+                                        name="name"
+                                        required
+                                        autoComplete="name"
+                                        placeholder="Nombre completo"
+                                    />
+                                    <InputError message={errors.name} />
+                                </div>
 
-                <Form
-                    {...ProfileController.update.form()}
-                    options={{
-                        preserveScroll: true,
-                    }}
-                    className="space-y-6"
-                >
-                    {({ processing, errors }) => (
-                        <>
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Name</Label>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="email">
+                                        Correo electrónico
+                                    </Label>
+                                    <Input
+                                        id="email"
+                                        type="email"
+                                        defaultValue={user.email}
+                                        name="email"
+                                        required
+                                        autoComplete="username"
+                                        placeholder="correo@ejemplo.com"
+                                    />
+                                    <InputError message={errors.email} />
+                                </div>
 
-                                <Input
-                                    id="name"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.name}
-                                    name="name"
-                                    required
-                                    autoComplete="name"
-                                    placeholder="Full name"
-                                />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.name}
-                                />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    className="mt-1 block w-full"
-                                    defaultValue={auth.user.email}
-                                    name="email"
-                                    required
-                                    autoComplete="username"
-                                    placeholder="Email address"
-                                />
-
-                                <InputError
-                                    className="mt-2"
-                                    message={errors.email}
-                                />
-                            </div>
-
-                            {mustVerifyEmail &&
-                                auth.user.email_verified_at === null && (
-                                    <div>
-                                        <p className="-mt-4 text-sm text-muted-foreground">
-                                            Your email address is unverified.{' '}
+                                {mustVerifyEmail &&
+                                    user.email_verified_at === null && (
+                                        <p className="text-sm text-muted-foreground">
+                                            Tu correo no está verificado.{' '}
                                             <Link
                                                 href={send()}
                                                 as="button"
-                                                className="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                                className="font-semibold text-foreground underline underline-offset-4"
                                             >
-                                                Click here to re-send the
-                                                verification email.
+                                                Reenviar correo de verificación
                                             </Link>
+                                            {status ===
+                                                'verification-link-sent' && (
+                                                <span className="mt-2 block font-medium text-success">
+                                                    Te enviamos un nuevo enlace
+                                                    de verificación.
+                                                </span>
+                                            )}
                                         </p>
+                                    )}
 
-                                        {status ===
-                                            'verification-link-sent' && (
-                                            <div className="mt-2 text-sm font-medium text-success">
-                                                A new verification link has been
-                                                sent to your email address.
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                            <div className="flex items-center gap-4">
                                 <Button
+                                    className="w-full sm:w-auto"
                                     disabled={processing}
                                     data-test="update-profile-button"
                                 >
-                                    Save
+                                    {processing && <Spinner />}
+                                    Guardar cambios
                                 </Button>
-                            </div>
-                        </>
-                    )}
-                </Form>
-            </div>
+                            </>
+                        )}
+                    </Form>
+                </CardContent>
+            </Card>
+
+            <nav aria-label="Ajustes" className="flex flex-col gap-2 md:hidden">
+                <LinkRow
+                    href={editSecurity()}
+                    icon={<ShieldCheck />}
+                    title="Seguridad"
+                    subtitle="Contraseña, passkeys y 2FA"
+                />
+                <LinkRow
+                    href={editAppearance()}
+                    icon={<Palette />}
+                    title="Apariencia"
+                    subtitle="Tema claro, oscuro o del sistema"
+                />
+            </nav>
+
+            <Button variant="outline" className="w-full" asChild>
+                <Link
+                    href={logout()}
+                    as="button"
+                    onClick={() => router.flushAll()}
+                    data-test="logout-button"
+                >
+                    <LogOut /> Cerrar sesión
+                </Link>
+            </Button>
 
             <DeleteUser />
         </>
@@ -129,10 +216,5 @@ export default function Profile({
 }
 
 Profile.layout = {
-    breadcrumbs: [
-        {
-            title: 'Profile settings',
-            href: edit(),
-        },
-    ],
+    breadcrumbs: [{ title: 'Perfil', href: edit() }],
 };

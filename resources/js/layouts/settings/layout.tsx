@@ -1,8 +1,8 @@
 import { Link } from '@inertiajs/react';
+import { ChevronLeft, Palette, ShieldCheck, UserRound } from 'lucide-react';
 import type { PropsWithChildren } from 'react';
 import Heading from '@/components/heading';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { cn, toUrl } from '@/lib/utils';
 import { edit as editAppearance } from '@/routes/appearance';
@@ -11,42 +11,44 @@ import { edit as editSecurity } from '@/routes/security';
 import type { NavItem } from '@/types';
 
 const sidebarNavItems: NavItem[] = [
-    {
-        title: 'Profile',
-        href: edit(),
-        icon: null,
-    },
-    {
-        title: 'Security',
-        href: editSecurity(),
-        icon: null,
-    },
-    {
-        title: 'Appearance',
-        href: editAppearance(),
-        icon: null,
-    },
+    { title: 'Perfil', href: edit(), icon: UserRound },
+    { title: 'Seguridad', href: editSecurity(), icon: ShieldCheck },
+    { title: 'Apariencia', href: editAppearance(), icon: Palette },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
     const { isCurrentOrParentUrl } = useCurrentUrl();
+    const onProfile = isCurrentOrParentUrl(edit());
 
     return (
-        <div className="px-4 py-6">
-            <Heading
-                title="Settings"
-                description="Manage your profile and account settings"
-            />
+        <div className="mx-auto w-full max-w-5xl p-4 md:py-6">
+            {/* On mobile the profile page links to the other settings pages. */}
+            {!onProfile && (
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    className="-ml-3 md:hidden"
+                    asChild
+                >
+                    <Link href={edit()}>
+                        <ChevronLeft /> Perfil
+                    </Link>
+                </Button>
+            )}
 
-            <div className="flex flex-col lg:flex-row lg:space-x-12">
-                <aside className="w-full max-w-xl lg:w-48">
-                    <nav
-                        className="flex flex-col space-y-1 space-x-0"
-                        aria-label="Settings"
-                    >
-                        {sidebarNavItems.map((item, index) => (
+            <div className="hidden md:block">
+                <Heading
+                    title="Ajustes"
+                    description="Administra tu perfil y tu cuenta"
+                />
+            </div>
+
+            <div className="flex flex-col lg:flex-row lg:gap-12">
+                <aside className="mb-6 hidden w-full md:block lg:w-48">
+                    <nav className="flex flex-col gap-1" aria-label="Ajustes">
+                        {sidebarNavItems.map((item) => (
                             <Button
-                                key={`${toUrl(item.href)}-${index}`}
+                                key={toUrl(item.href)}
                                 size="sm"
                                 variant="ghost"
                                 asChild
@@ -55,9 +57,7 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                                 })}
                             >
                                 <Link href={item.href}>
-                                    {item.icon && (
-                                        <item.icon className="h-4 w-4" />
-                                    )}
+                                    {item.icon && <item.icon />}
                                     {item.title}
                                 </Link>
                             </Button>
@@ -65,10 +65,8 @@ export default function SettingsLayout({ children }: PropsWithChildren) {
                     </nav>
                 </aside>
 
-                <Separator className="my-6 lg:hidden" />
-
                 <div className="flex-1 md:max-w-2xl">
-                    <section className="max-w-xl space-y-12">
+                    <section className="flex max-w-xl flex-col gap-4 md:gap-8">
                         {children}
                     </section>
                 </div>

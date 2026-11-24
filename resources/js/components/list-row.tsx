@@ -1,3 +1,6 @@
+import { Link } from '@inertiajs/react';
+import type { InertiaLinkProps } from '@inertiajs/react';
+import { ChevronRight } from 'lucide-react';
 import type { ComponentProps, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
@@ -62,5 +65,48 @@ export function ListLabel({ children }: { children: ReactNode }) {
         <h3 className="px-1 pt-2 text-sm font-semibold text-muted-foreground">
             {children}
         </h3>
+    );
+}
+
+/** Navigation row: icon bubble, title/subtitle and a chevron. */
+export function LinkRow({
+    href,
+    icon,
+    title,
+    subtitle,
+    active = false,
+    onClick,
+}: {
+    href: NonNullable<InertiaLinkProps['href']>;
+    icon: ReactNode;
+    title: string;
+    subtitle?: string;
+    active?: boolean;
+    onClick?: () => void;
+}) {
+    return (
+        <Link
+            href={href}
+            prefetch
+            onClick={onClick}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+                'flex items-center gap-3 rounded-lg border border-transparent bg-card p-3 shadow-soft transition-colors hover:bg-accent/40 dark:border-border dark:shadow-none',
+                active && 'bg-accent text-accent-foreground',
+            )}
+        >
+            <span className="grid size-10 shrink-0 place-items-center rounded-full bg-accent text-accent-foreground [&_svg]:size-5">
+                {icon}
+            </span>
+            <span className="min-w-0 flex-1">
+                <span className="block truncate font-semibold">{title}</span>
+                {subtitle && (
+                    <span className="block truncate text-sm text-muted-foreground">
+                        {subtitle}
+                    </span>
+                )}
+            </span>
+            <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
     );
 }
