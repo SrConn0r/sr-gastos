@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use Anthropic\Client;
+use App\Ai\AiException;
+use App\Ai\AiProvider;
+use App\Ai\Providers\AnthropicProvider;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +19,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(AiProvider::class, fn (): AiProvider => match (config('ai.provider')) {
+            'anthropic' => new AnthropicProvider(
+                new Client(apiKey: (string) config('ai.providers.anthropic.key')),
+                (string) config('ai.model'),
+                (string) config('ai.effort'),
+            ),
+            default => throw new AiException('Proveedor de IA no soportado: '.config('ai.provider')),
+        });
     }
 
     /**
