@@ -63,7 +63,7 @@ it('records a confident expense', function () {
 
     expect($email->status)->toBe(InboundEmailStatus::Recorded)
         ->and($email->ai_result['reason'])->toBe('Pago QR a restaurante')
-        ->and($ai->input)->toContain('BBVA Ahorros')->toContain('Restaurantes')->toContain('Enviaste $45.000');
+        ->and($ai->input)->toContain('BBVA Ahorros')->toContain('Restaurantes')->toContain('Enviaste $45.000')->toContain('Titular: '.$this->email->user->name);
     expect(Transaction::sole())
         ->title->toBe('Restaurante El Corral')
         ->amount->toBe('45000.00')

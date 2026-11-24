@@ -1,0 +1,31 @@
+From: RappiCard <noreply@rappicard.co>
+Subject: RappiCard - Resumen de transacción
+
+¡Hola, JUAN PABLO PEREZ GOMEZ!
+Realizaste una compra con tu RappiCard.
+
+Detalle de tu transacción:
+
+Monto
+
+$17.502,40
+
+Método de pago
+
+*0027
+
+No. de autorización
+
+100003
+
+Comercio
+
+LARAVEL CLOUD
+
+Fecha de la transacción
+
+2026-11-22 20:01:24
+
+¿Necesitas ayuda?
+
+Escríbenos desde tu app, estamos 24/7.

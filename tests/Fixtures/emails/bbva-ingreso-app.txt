@@ -1,0 +1,20 @@
+From: BBVA <BBVA@bbvanet.com.co>
+Subject: Importante: Confirmación de ingreso en nuestros canales digitales.
+
+Hola, JUAN PABLO
+Acabas de ingresar a tu App BBVA con éxito
+y ahora podrás:
+
+Detalles de la operación
+Referencia:
+10000002
+Tipo de operación:
+Ingreso App BBVA
+Fecha de la operación:
+2026-11-23
+Hora:
+22:12
+Versión de la aplicación:
+26.110.29
+Dispositivo:
+iPhone iOS 27.2.1

@@ -1,0 +1,20 @@
+From: notificacionesBreB@bbva.com
+Subject: Tu envío con llave fue exitoso
+
+El envío se completó correctamente
+Juan pablo Perez gomez , tu envío a través de Bre-B fue exitoso. La llave *****4321 recibió el valor que le enviaste.
+Detalles de la operación
+Fecha y hora
+2026/11/24 11:52
+Valor enviado
+$ 70.000,00
+Persona que recibe
+CARLOS ALBERTO ROJAS MEJIA
+Entidad que recibe
+Bancolombia
+Tipo de llave
+Documento de identidad
+Cuenta origen
+*****5951
+Código de operación
+10000000000000000000000000000000001

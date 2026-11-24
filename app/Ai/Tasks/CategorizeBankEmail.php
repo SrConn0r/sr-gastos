@@ -17,15 +17,15 @@ final class CategorizeBankEmail
         kind:
         - "expense": money left the user (card purchase, QR payment, Bre-B or bank transfer sent to a person or business, bill payment).
         - "income": money arrived from someone else (client payment, transfer received).
-        - "internal_transfer": money moved between the user's own accounts (the other side is one of the listed accounts or their own name at another bank), or a credit card bill paid from a savings account. A purchase made WITH a credit card is an "expense" on that card's account, not a transfer.
-        - "not_a_transaction": anything else (promotions, OTP codes, statements, login alerts, failed or declined operations).
+        - "internal_transfer": money moved between the user's own accounts: the sender or recipient is the account holder (compare names loosely: case, accents and missing middle names do not matter), or a credit card bill paid from a savings account. A transfer to another person is an "expense" even if it lands at a bank where the user also has an account. A purchase made WITH a credit card is an "expense" on that card's account, not a transfer.
+        - "not_a_transaction": anything else (promotions, OTP codes, statements, login or app-access alerts, failed or declined operations).
 
         Fields:
-        - amount: positive number. Colombian notation uses "." for thousands and "," for decimals: "$1.234.567,89" is 1234567.89.
-        - currency: COP, USD or BRL only when the email clearly states it; null when it does not say.
-        - date: the operation date as YYYY-MM-DD, or null if the email has none.
+        - amount: positive number. Banks mix notations, so decide each separator by what follows it: a "." or "," followed by exactly three digits groups thousands; one followed by one or two digits at the end marks decimals. "$70.000,00" is 70000, "$87,350.00" is 87350, "$49,900" is 49900, "4.500" is 4500, "$17.502,40" is 17502.40, "$27,17 USD" is 27.17.
+        - currency: COP, USD or BRL only when the email clearly states it (USDC counts as USD); null when it does not say.
+        - date: the operation date as YYYY-MM-DD, or null if the email has none. Numeric dates written with "/" and the year last are day/month/year ("02/11/2026" is 2026-11-02); "2026/11/24" is year/month/day; month names are in Spanish.
         - title: a short label for the counterparty, e.g. "Restaurante El Corral" or "Pago de Acme SAS". No amounts.
-        - account_id: the listed account the money left or arrived at, matched by institution, last 4 digits and kind. null if none matches. Never invent ids.
+        - account_id: the listed account the money left or arrived at, matched by institution, last 4 digits ("*****5951", "•9267" and "*0027" all end in those digits) and kind. The bank that sent the email is where the user's money is; the counterparty's bank is not. null if none matches. Never invent ids.
         - category_id: the best listed category whose type matches kind (expense or income). null if none fits. Never invent ids.
         - confident: false if you guessed the amount, the account or the category.
         - reason: one short Spanish sentence explaining the classification.
@@ -60,6 +60,8 @@ final class CategorizeBankEmail
         $categoryLines = $categories->map(fn (Category $c) => "- id {$c->id}: {$c->name} ({$c->type->value})")->implode("\n");
 
         return <<<TEXT
+            Titular: {$email->user->name}
+
             Cuentas del usuario:
             {$accountLines}
 
