@@ -5,6 +5,7 @@
 **Goal:** Registrar automáticamente gastos e ingresos a partir de las notificaciones bancarias del Gmail del dueño. La IA los clasifica y los asigna por cuenta bancaria.
 
 **Architecture:**
+
 - Un Google Apps Script hace POST cada hora a `/api/inbound-emails`, que solo guarda los correos como `pending`.
 - Un comando programado cada hora (`inbound-emails:process`) los pasa por `CategorizeBankEmail`, que usa la interfaz `AiProvider`, agnóstica al proveedor; el primero es Anthropic con el SDK oficial.
 - Después se validan los ids devueltos contra la BD y se crea el `Transaction`, marcado "Por revisar" cuando hay dudas.
@@ -27,25 +28,25 @@
 
 ## File Structure
 
-| Archivo | Responsabilidad |
-|---|---|
-| `app/Enums/AccountKind.php` | `deposit` / `credit_card` |
-| `app/Enums/InboundEmailStatus.php` | estados del correo |
-| `app/Models/Account.php` | cuenta bancaria o tarjeta |
-| `app/Models/InboundEmail.php` | correo recibido + resultado de IA |
-| `app/Http/Controllers/AccountController.php` + `Requests/AccountRequest.php` | CRUD de cuentas |
-| `app/Http/Controllers/Api/InboundEmailController.php` | webhook de ingesta |
-| `app/Http/Controllers/InboundEmailController.php` | historial + reintentar |
-| `app/Ai/AiProvider.php`, `AiException.php` | contrato agnóstico |
-| `app/Ai/Providers/AnthropicProvider.php` | implementación Claude |
-| `app/Ai/Tasks/CategorizeBankEmail.php` | prompt + esquema del caso de uso |
-| `app/Services/InboundEmailProcessor.php` | valida la respuesta y crea el movimiento |
-| `config/ai.php` | proveedor, modelo, esfuerzo, credenciales |
-| `routes/api.php` | ruta del webhook |
-| `routes/console.php` | comando `inbound-emails:process` + schedule |
-| `resources/js/pages/accounts/index.tsx`, `components/account-dialog.tsx` | UI de cuentas |
-| `resources/js/pages/inbound-emails/index.tsx` | UI del historial |
-| `docs/gmail-apps-script.js` | script de Gmail con instrucciones |
+| Archivo                                                                      | Responsabilidad                             |
+| ---------------------------------------------------------------------------- | ------------------------------------------- |
+| `app/Enums/AccountKind.php`                                                  | `deposit` / `credit_card`                   |
+| `app/Enums/InboundEmailStatus.php`                                           | estados del correo                          |
+| `app/Models/Account.php`                                                     | cuenta bancaria o tarjeta                   |
+| `app/Models/InboundEmail.php`                                                | correo recibido + resultado de IA           |
+| `app/Http/Controllers/AccountController.php` + `Requests/AccountRequest.php` | CRUD de cuentas                             |
+| `app/Http/Controllers/Api/InboundEmailController.php`                        | webhook de ingesta                          |
+| `app/Http/Controllers/InboundEmailController.php`                            | historial + reintentar                      |
+| `app/Ai/AiProvider.php`, `AiException.php`                                   | contrato agnóstico                          |
+| `app/Ai/Providers/AnthropicProvider.php`                                     | implementación Claude                       |
+| `app/Ai/Tasks/CategorizeBankEmail.php`                                       | prompt + esquema del caso de uso            |
+| `app/Services/InboundEmailProcessor.php`                                     | valida la respuesta y crea el movimiento    |
+| `config/ai.php`                                                              | proveedor, modelo, esfuerzo, credenciales   |
+| `routes/api.php`                                                             | ruta del webhook                            |
+| `routes/console.php`                                                         | comando `inbound-emails:process` + schedule |
+| `resources/js/pages/accounts/index.tsx`, `components/account-dialog.tsx`     | UI de cuentas                               |
+| `resources/js/pages/inbound-emails/index.tsx`                                | UI del historial                            |
+| `docs/gmail-apps-script.js`                                                  | script de Gmail con instrucciones           |
 
 ---
 
@@ -59,11 +60,13 @@
 ### Task 1: Cuentas bancarias (backend)
 
 **Files:**
+
 - Create: `app/Enums/AccountKind.php`, `app/Models/Account.php`, `database/factories/AccountFactory.php`, `database/migrations/2026_11_24_000000_create_accounts_table.php`, `app/Http/Requests/AccountRequest.php`, `app/Http/Controllers/AccountController.php`
 - Modify: `routes/web.php`, `app/Models/Transaction.php`
 - Test: `tests/Feature/AccountTest.php`
 
 **Interfaces:**
+
 - Produces: `Account` (props `id, name, institution, kind: AccountKind, currency: Currency, last4: ?string, archived_at: ?Carbon`), scope `Account::active()`, relación `Account::transactions()`, `Transaction::account()`, columna `transactions.account_id`. Rutas `accounts.index|store|update|destroy`. El campo de request `archived` (boolean) archiva o desarchiva.
 
 - [ ] **Step 1: Write the failing test** — `tests/Feature/AccountTest.php`
@@ -279,9 +282,9 @@ class AccountFactory extends Factory
 ```
 
 - [ ] **Step 7: Transaction relation** — en `app/Models/Transaction.php`:
-  - agrega `@property int|null $account_id` y `@property-read Account|null $account` al docblock
-  - agrega `'account_id'` al array de `#[Fillable]`
-  - agrega el método:
+    - agrega `@property int|null $account_id` y `@property-read Account|null $account` al docblock
+    - agrega `'account_id'` al array de `#[Fillable]`
+    - agrega el método:
 
 ```php
     /** @return BelongsTo<Account, $this> */
@@ -393,7 +396,7 @@ class AccountController extends Controller
     Route::resource('accounts', AccountController::class)->only(['index', 'store', 'update', 'destroy']);
 ```
 
-  y agrega `use App\Http\Controllers\AccountController;` arriba.
+y agrega `use App\Http\Controllers\AccountController;` arriba.
 
 - [ ] **Step 11: Run test to verify it passes**
 
@@ -413,10 +416,12 @@ git commit -m "feat: add bank accounts"
 ### Task 2: Cuentas bancarias (UI)
 
 **Files:**
+
 - Create: `resources/js/components/account-dialog.tsx`, `resources/js/pages/accounts/index.tsx`
 - Modify: `resources/js/types/finance.ts`, `resources/js/components/app-sidebar.tsx`
 
 **Interfaces:**
+
 - Consumes: rutas Wayfinder `@/routes/accounts` (`index`, `store`, `update`, `destroy`). Se regeneran con `npm run dev` o `npm run build`. Prop `accounts: Account[]` (con `transactions_count`).
 - Produces: tipo TS `Account` y `AccountKind`, usados en las Tasks 4, 9 y 10.
 
@@ -529,15 +534,23 @@ export function AccountDialog({ account, trigger, footer }: Props) {
                                     <Label htmlFor="kind">Tipo</Label>
                                     <Select
                                         name="kind"
-                                        defaultValue={account?.kind ?? 'deposit'}
+                                        defaultValue={
+                                            account?.kind ?? 'deposit'
+                                        }
                                     >
-                                        <SelectTrigger id="kind" className="w-full">
+                                        <SelectTrigger
+                                            id="kind"
+                                            className="w-full"
+                                        >
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {Object.entries(ACCOUNT_KINDS).map(
                                                 ([value, label]) => (
-                                                    <SelectItem key={value} value={value}>
+                                                    <SelectItem
+                                                        key={value}
+                                                        value={value}
+                                                    >
                                                         {label}
                                                     </SelectItem>
                                                 ),
@@ -549,14 +562,22 @@ export function AccountDialog({ account, trigger, footer }: Props) {
                                     <Label htmlFor="currency">Moneda</Label>
                                     <Select
                                         name="currency"
-                                        defaultValue={account?.currency ?? 'COP'}
+                                        defaultValue={
+                                            account?.currency ?? 'COP'
+                                        }
                                     >
-                                        <SelectTrigger id="currency" className="w-full">
+                                        <SelectTrigger
+                                            id="currency"
+                                            className="w-full"
+                                        >
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {CURRENCIES.map((code) => (
-                                                <SelectItem key={code} value={code}>
+                                                <SelectItem
+                                                    key={code}
+                                                    value={code}
+                                                >
                                                     {code}
                                                 </SelectItem>
                                             ))}
@@ -582,7 +603,8 @@ export function AccountDialog({ account, trigger, footer }: Props) {
                                     defaultValue={account?.last4 ?? ''}
                                 />
                                 <p className="text-sm text-muted-foreground">
-                                    Ayudan a reconocer la cuenta en los correos del banco.
+                                    Ayudan a reconocer la cuenta en los correos
+                                    del banco.
                                 </p>
                                 <InputError message={errors.last4} />
                             </div>
@@ -597,13 +619,19 @@ export function AccountDialog({ account, trigger, footer }: Props) {
                                     <Checkbox
                                         id="archived"
                                         checked={archived}
-                                        onCheckedChange={(value) => setArchived(value === true)}
+                                        onCheckedChange={(value) =>
+                                            setArchived(value === true)
+                                        }
                                     />
                                     <Label htmlFor="archived">Archivada</Label>
                                 </div>
                             )}
 
-                            <Button type="submit" className="w-full" disabled={processing}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={processing}
+                            >
                                 {processing && <Spinner />}
                                 Guardar
                             </Button>
@@ -657,7 +685,10 @@ export default function Accounts({ accounts }: { accounts: Account[] }) {
                 </div>
 
                 {sections.map((section) => (
-                    <section key={section.title} className="flex flex-col gap-2">
+                    <section
+                        key={section.title}
+                        className="flex flex-col gap-2"
+                    >
                         <ListLabel>{section.title}</ListLabel>
                         {section.items.map((account) => (
                             <AccountDialog
@@ -668,9 +699,12 @@ export default function Accounts({ accounts }: { accounts: Account[] }) {
                                         label="Eliminar cuenta"
                                         description="Solo se pueden eliminar cuentas sin movimientos; las demás se archivan."
                                         onConfirm={() =>
-                                            router.delete(destroy.url(account.id), {
-                                                preserveScroll: true,
-                                            })
+                                            router.delete(
+                                                destroy.url(account.id),
+                                                {
+                                                    preserveScroll: true,
+                                                },
+                                            )
                                         }
                                     />
                                 }
@@ -681,7 +715,8 @@ export default function Accounts({ accounts }: { accounts: Account[] }) {
                                         subtitle={[
                                             account.institution,
                                             ACCOUNT_KINDS[account.kind],
-                                            account.last4 && `•••• ${account.last4}`,
+                                            account.last4 &&
+                                                `•••• ${account.last4}`,
                                             `${account.transactions_count} movimientos`,
                                         ]
                                             .filter(Boolean)
@@ -700,7 +735,8 @@ export default function Accounts({ accounts }: { accounts: Account[] }) {
 
                 {accounts.length === 0 && (
                     <p className="py-16 text-center text-muted-foreground">
-                        Aún no tienes cuentas. Crea una por cada banco o tarjeta.
+                        Aún no tienes cuentas. Crea una por cada banco o
+                        tarjeta.
                     </p>
                 )}
             </div>
@@ -714,8 +750,8 @@ Accounts.layout = {
 ```
 
 - [ ] **Step 4: Nav** — en `resources/js/components/app-sidebar.tsx`:
-  - importa `Landmark` de `lucide-react` y `import { index as accounts } from '@/routes/accounts';`
-  - agrega `{ title: 'Cuentas', href: accounts(), icon: Landmark },` después de "Categorías" en `mainNavItems`
+    - importa `Landmark` de `lucide-react` y `import { index as accounts } from '@/routes/accounts';`
+    - agrega `{ title: 'Cuentas', href: accounts(), icon: Landmark },` después de "Categorías" en `mainNavItems`
 
 - [ ] **Step 5: Verify**
 
@@ -736,11 +772,13 @@ git commit -m "feat: add accounts page"
 ### Task 3: Movimientos con cuenta y "Por revisar" (backend)
 
 **Files:**
+
 - Create: `database/migrations/2026_11_24_000001_add_needs_review_to_transactions_table.php`
 - Modify: `app/Models/Transaction.php`, `app/Http/Requests/TransactionRequest.php`, `app/Http/Requests/TransactionFilterRequest.php`, `app/Http/Controllers/TransactionController.php`
 - Test: `tests/Feature/TransactionTest.php` (agregar casos)
 
 **Interfaces:**
+
 - Consumes: `Account` (Task 1).
 - Produces: `transactions.needs_review` (bool, cast). Props de la página `transactions/index`: `accounts: {id,name,currency,archived_at}[]`, cada transacción con `account: {id,name}|null`. Filtros `account` (id) y `review` (`1`). Editar un movimiento pone `needs_review = false`.
 
@@ -825,9 +863,9 @@ return new class extends Migration
 ```
 
 - [ ] **Step 4: Model** — en `app/Models/Transaction.php`:
-  - agrega `'needs_review'` a `#[Fillable]`
-  - agrega `@property bool $needs_review` al docblock
-  - agrega `'needs_review' => 'boolean',` a `casts()`
+    - agrega `'needs_review'` a `#[Fillable]`
+    - agrega `@property bool $needs_review` al docblock
+    - agrega `'needs_review' => 'boolean',` a `casts()`
 
 - [ ] **Step 5: Requests**
 
@@ -884,9 +922,11 @@ git commit -m "feat: assign movements to accounts and flag them for review"
 ### Task 4: Movimientos con cuenta y "Por revisar" (UI)
 
 **Files:**
+
 - Modify: `resources/js/types/finance.ts`, `resources/js/components/transaction-dialog.tsx`, `resources/js/pages/transactions/index.tsx`, todos los llamadores de `TransactionDialog` (busca con `grep -rn "<TransactionDialog" resources/js`)
 
 **Interfaces:**
+
 - Consumes: props `accounts` y `transaction.account` (Task 3), tipo `Account` (Task 2).
 - Produces: `TransactionDialog` acepta `accounts?: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[]`. Es opcional: si se omite, el selector no aparece y no se envía `account_id`, así el dashboard y los pagos de gastos fijos siguen funcionando sin cambios.
 
@@ -900,64 +940,68 @@ git commit -m "feat: assign movements to accounts and flag them for review"
 ```
 
 - [ ] **Step 2: Dialog** — en `transaction-dialog.tsx`:
-  - agrega a `Props`: `accounts?: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[];`
-  - pásalo de `TransactionDialog` a `TransactionForm`
-  - dentro de `TransactionForm`, después del `useState` de `currency`, agrega:
+    - agrega a `Props`: `accounts?: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[];`
+    - pásalo de `TransactionDialog` a `TransactionForm`
+    - dentro de `TransactionForm`, después del `useState` de `currency`, agrega:
 
 ```tsx
-    const [accountId, setAccountId] = useState(
-        transaction?.account_id ? String(transaction.account_id) : 'none',
-    );
-    const selectableAccounts = (accounts ?? []).filter(
-        (account) => !account.archived_at || account.id === transaction?.account_id,
-    );
+const [accountId, setAccountId] = useState(
+    transaction?.account_id ? String(transaction.account_id) : 'none',
+);
+const selectableAccounts = (accounts ?? []).filter(
+    (account) => !account.archived_at || account.id === transaction?.account_id,
+);
 ```
 
-  y justo antes del bloque de "Monto" agrega:
+y justo antes del bloque de "Monto" agrega:
 
 ```tsx
-                    {accounts && (
-                        <div className="grid gap-2">
-                            <Label htmlFor="account">Cuenta</Label>
-                            <input
-                                type="hidden"
-                                name="account_id"
-                                value={accountId === 'none' ? '' : accountId}
-                            />
-                            <Select
-                                value={accountId}
-                                onValueChange={(value) => {
-                                    setAccountId(value);
-                                    const account = accounts.find((a) => String(a.id) === value);
-                                    if (account) {
-                                        setCurrency(account.currency);
-                                    }
-                                }}
-                            >
-                                <SelectTrigger id="account" className="w-full">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">Sin cuenta</SelectItem>
-                                    {selectableAccounts.map((account) => (
-                                        <SelectItem key={account.id} value={String(account.id)}>
-                                            {account.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                            <InputError message={errors.account_id} />
-                        </div>
-                    )}
+{
+    accounts && (
+        <div className="grid gap-2">
+            <Label htmlFor="account">Cuenta</Label>
+            <input
+                type="hidden"
+                name="account_id"
+                value={accountId === 'none' ? '' : accountId}
+            />
+            <Select
+                value={accountId}
+                onValueChange={(value) => {
+                    setAccountId(value);
+                    const account = accounts.find(
+                        (a) => String(a.id) === value,
+                    );
+                    if (account) {
+                        setCurrency(account.currency);
+                    }
+                }}
+            >
+                <SelectTrigger id="account" className="w-full">
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="none">Sin cuenta</SelectItem>
+                    {selectableAccounts.map((account) => (
+                        <SelectItem key={account.id} value={String(account.id)}>
+                            {account.name}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+            <InputError message={errors.account_id} />
+        </div>
+    );
+}
 ```
 
-  Importa `Account` desde `@/types`.
+Importa `Account` desde `@/types`.
 
 - [ ] **Step 3: List + filters** — en `pages/transactions/index.tsx`:
-  - `Filters` gana las claves `'account' | 'review'`; `Props` gana `accounts: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[]`
-  - pasa `accounts={accounts}` a los dos `<TransactionDialog>`
-  - en el `subtitle` del `ListRow`, agrega `transaction.account?.name` antes de `transaction.user?.name`
-  - cambia `title={transaction.title}` por:
+    - `Filters` gana las claves `'account' | 'review'`; `Props` gana `accounts: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[]`
+    - pasa `accounts={accounts}` a los dos `<TransactionDialog>`
+    - en el `subtitle` del `ListRow`, agrega `transaction.account?.name` antes de `transaction.user?.name`
+    - cambia `title={transaction.title}` por:
 
 ```tsx
                                                 title={
@@ -973,8 +1017,8 @@ git commit -m "feat: assign movements to accounts and flag them for review"
                                                 }
 ```
 
-  - agrega `import { Badge } from '@/components/ui/badge';`
-  - en la grilla de filtros, después del select de moneda, agrega:
+- agrega `import { Badge } from '@/components/ui/badge';`
+- en la grilla de filtros, después del select de moneda, agrega:
 
 ```tsx
                                 <Select name="account" defaultValue={filters.account ?? 'all'}>
@@ -1001,7 +1045,7 @@ git commit -m "feat: assign movements to accounts and flag them for review"
                                 </Select>
 ```
 
-  Revisa `components/ui/badge.tsx` para confirmar los nombres de `variant`. Si no existe `destructive`, usa el que exista con color de alerta.
+Revisa `components/ui/badge.tsx` para confirmar los nombres de `variant`. Si no existe `destructive`, usa el que exista con color de alerta.
 
 - [ ] **Step 4: Verify**
 
@@ -1009,6 +1053,7 @@ Run: `npm run types:check && npm run check:fix && npm run build && php artisan t
 Expected: sin errores.
 
 En `composer dev`:
+
 - crea un movimiento con cuenta (la moneda cambia sola a la de la cuenta)
 - filtra por esa cuenta
 - marca uno a mano con `php artisan tinker`: `App\Models\Transaction::first()->update(['needs_review'=>true])`
@@ -1026,16 +1071,18 @@ git commit -m "feat: show account and review badges on movements"
 ### Task 5: Módulo de IA agnóstico + proveedor Anthropic
 
 **Files:**
+
 - Create: `config/ai.php`, `app/Ai/AiProvider.php`, `app/Ai/AiException.php`, `app/Ai/Providers/AnthropicProvider.php`
 - Modify: `composer.json` / `composer.lock` (vía composer), `app/Providers/AppServiceProvider.php`, `.env.example`
 - Test: `tests/Unit/AnthropicProviderTest.php`
 
 **Interfaces:**
+
 - Produces:
-  - `App\Ai\AiProvider::structured(string $system, string $input, array $schema): array` (`@param array<string, mixed> $schema` JSON Schema de un objeto, `@return array<string, mixed>`, `@throws AiException`)
-  - `App\Ai\AiException extends \RuntimeException`
-  - `AnthropicProvider::parse(?string $stopReason, ?string $text): array` (estática, pura)
-  - binding del contenedor `AiProvider::class` según `config('ai.provider')`
+    - `App\Ai\AiProvider::structured(string $system, string $input, array $schema): array` (`@param array<string, mixed> $schema` JSON Schema de un objeto, `@return array<string, mixed>`, `@throws AiException`)
+    - `App\Ai\AiException extends \RuntimeException`
+    - `AnthropicProvider::parse(?string $stopReason, ?string $text): array` (estática, pura)
+    - binding del contenedor `AiProvider::class` según `config('ai.provider')`
 
 - [ ] **Step 1: Install SDK**
 
@@ -1051,6 +1098,7 @@ ls vendor/anthropic-ai/sdk/src/Core/Exceptions
 ```
 
 Confirma:
+
 1. el nombre del parámetro de API key en `Client::__construct` (se espera `apiKey`)
 2. si `beta->messages->create` acepta `fallbacks` y `betas`
 3. el nombre de la clase base de excepciones (se espera `Anthropic\Core\Exceptions\APIException`; si no existe, usa la clase padre común de `APIStatusException` y `APIConnectionException`)
@@ -1257,17 +1305,19 @@ git commit -m "feat: add provider-agnostic AI module with Anthropic provider"
 ### Task 6: Ingesta de correos (tabla + webhook)
 
 **Files:**
+
 - Create: `app/Enums/InboundEmailStatus.php`, `app/Models/InboundEmail.php`, `database/factories/InboundEmailFactory.php`, `database/migrations/2026_11_24_000002_create_inbound_emails_table.php`, `routes/api.php`, `app/Http/Controllers/Api/InboundEmailController.php`
 - Modify: `bootstrap/app.php`, `config/services.php`, `app/Models/Transaction.php`, `.env.example`
 - Test: `tests/Feature/InboundEmailApiTest.php`
 
 **Interfaces:**
+
 - Produces:
-  - `InboundEmail` (props `id, user_id, message_id, from, subject, received_at: CarbonImmutable, body, status: InboundEmailStatus, attempts: int, ai_result: ?array, error: ?string, processed_at: ?Carbon`)
-  - relaciones `user()`, `transaction()` (hasOne)
-  - columna `transactions.inbound_email_id` y relación `Transaction::inboundEmail()`
-  - ruta `POST /api/inbound-emails` (nombre `api.inbound-emails.store`)
-  - config `services.inbound_email.token`
+    - `InboundEmail` (props `id, user_id, message_id, from, subject, received_at: CarbonImmutable, body, status: InboundEmailStatus, attempts: int, ai_result: ?array, error: ?string, processed_at: ?Carbon`)
+    - relaciones `user()`, `transaction()` (hasOne)
+    - columna `transactions.inbound_email_id` y relación `Transaction::inboundEmail()`
+    - ruta `POST /api/inbound-emails` (nombre `api.inbound-emails.store`)
+    - config `services.inbound_email.token`
 
 - [ ] **Step 1: Write the failing test** — `tests/Feature/InboundEmailApiTest.php`
 
@@ -1522,9 +1572,9 @@ class InboundEmailFactory extends Factory
 ```
 
 - [ ] **Step 7: Transaction relation** — en `app/Models/Transaction.php`:
-  - agrega `'inbound_email_id'` a `#[Fillable]`
-  - agrega `@property int|null $inbound_email_id` y `@property-read InboundEmail|null $inboundEmail` al docblock
-  - agrega:
+    - agrega `'inbound_email_id'` a `#[Fillable]`
+    - agrega `@property int|null $inbound_email_id` y `@property-read InboundEmail|null $inboundEmail` al docblock
+    - agrega:
 
 ```php
     /** @return BelongsTo<InboundEmail, $this> */
@@ -1637,15 +1687,17 @@ git commit -m "feat: receive bank notification emails through an authenticated w
 ### Task 7: Clasificación con IA y registro del movimiento
 
 **Files:**
+
 - Create: `app/Ai/Tasks/CategorizeBankEmail.php`, `app/Services/InboundEmailProcessor.php`
 - Test: `tests/Feature/InboundEmailProcessorTest.php`
 
 **Interfaces:**
+
 - Consumes: `AiProvider` / `AiException` (Task 5), `InboundEmail` / `InboundEmailStatus` (Task 6), `Account::active()` (Task 1), campos `account_id`, `needs_review` e `inbound_email_id` de `Transaction`.
 - Produces:
-  - `CategorizeBankEmail::__invoke(InboundEmail $email, Collection $accounts, Collection $categories): array<string, mixed>`
-  - `InboundEmailProcessor::process(InboundEmail $email): void`
-  - `InboundEmailProcessor::MAX_ATTEMPTS = 3`
+    - `CategorizeBankEmail::__invoke(InboundEmail $email, Collection $accounts, Collection $categories): array<string, mixed>`
+    - `InboundEmailProcessor::process(InboundEmail $email): void`
+    - `InboundEmailProcessor::MAX_ATTEMPTS = 3`
 
 - [ ] **Step 1: Write the failing test** — `tests/Feature/InboundEmailProcessorTest.php`
 
@@ -2053,10 +2105,12 @@ git commit -m "feat: categorize bank emails with AI and record movements"
 ### Task 8: Procesamiento programado
 
 **Files:**
+
 - Modify: `routes/console.php`
 - Test: `tests/Feature/ProcessInboundEmailsCommandTest.php`
 
 **Interfaces:**
+
 - Consumes: `InboundEmailProcessor::process` (Task 7).
 - Produces: comando `inbound-emails:process`, programado cada hora.
 
@@ -2142,15 +2196,17 @@ git commit -m "feat: process pending bank emails every hour"
 ### Task 9: Historial de correos (backend + UI)
 
 **Files:**
+
 - Create: `app/Http/Controllers/InboundEmailController.php`, `resources/js/pages/inbound-emails/index.tsx`
 - Modify: `routes/web.php`, `resources/js/types/finance.ts`, `resources/js/components/app-sidebar.tsx`
 - Test: `tests/Feature/InboundEmailHistoryTest.php`
 
 **Interfaces:**
+
 - Consumes: `InboundEmail`, `InboundEmailStatus` (Task 6).
 - Produces:
-  - rutas `inbound-emails.index` (GET, query `status`) e `inbound-emails.retry` (POST `{inboundEmail}`)
-  - props `emails: Paginated<InboundEmail>` (con `transaction: {id,title,amount,currency,inbound_email_id}|null`) y `filters: {status?}`
+    - rutas `inbound-emails.index` (GET, query `status`) e `inbound-emails.retry` (POST `{inboundEmail}`)
+    - props `emails: Paginated<InboundEmail>` (con `transaction: {id,title,amount,currency,inbound_email_id}|null`) y `filters: {status?}`
 
 - [ ] **Step 1: Write the failing test** — `tests/Feature/InboundEmailHistoryTest.php`
 
@@ -2280,7 +2336,10 @@ export type InboundEmail = {
     attempts: number;
     error: string | null;
     ai_result: { reason?: string } | null;
-    transaction: Pick<Transaction, 'id' | 'title' | 'amount' | 'currency'> | null;
+    transaction: Pick<
+        Transaction,
+        'id' | 'title' | 'amount' | 'currency'
+    > | null;
 };
 ```
 
@@ -2321,17 +2380,25 @@ export default function InboundEmails({ emails, filters }: Props) {
                 />
 
                 <div className="flex flex-wrap gap-2">
-                    <Button variant={filters.status ? 'outline' : 'ink'} size="sm" asChild>
+                    <Button
+                        variant={filters.status ? 'outline' : 'ink'}
+                        size="sm"
+                        asChild
+                    >
                         <Link href={index()}>Todos</Link>
                     </Button>
                     {Object.entries(STATUS).map(([value, label]) => (
                         <Button
                             key={value}
-                            variant={filters.status === value ? 'ink' : 'outline'}
+                            variant={
+                                filters.status === value ? 'ink' : 'outline'
+                            }
                             size="sm"
                             asChild
                         >
-                            <Link href={index({ query: { status: value } })}>{label}</Link>
+                            <Link href={index({ query: { status: value } })}>
+                                {label}
+                            </Link>
                         </Button>
                     ))}
                 </div>
@@ -2350,12 +2417,21 @@ export default function InboundEmails({ emails, filters }: Props) {
                                 .join(' · ')}
                             value={
                                 <span className="flex flex-col items-end gap-1">
-                                    <Badge variant={email.status === 'failed' ? 'destructive' : 'secondary'}>
+                                    <Badge
+                                        variant={
+                                            email.status === 'failed'
+                                                ? 'destructive'
+                                                : 'secondary'
+                                        }
+                                    >
                                         {STATUS[email.status]}
                                     </Badge>
                                     {email.transaction && (
                                         <span className="text-sm font-semibold">
-                                            {formatMoney(email.transaction.amount, email.transaction.currency)}
+                                            {formatMoney(
+                                                email.transaction.amount,
+                                                email.transaction.currency,
+                                            )}
                                         </span>
                                     )}
                                 </span>
@@ -2367,7 +2443,11 @@ export default function InboundEmails({ emails, filters }: Props) {
                                         size="icon"
                                         aria-label="Reintentar"
                                         onClick={() =>
-                                            router.post(retry.url(email.id), {}, { preserveScroll: true })
+                                            router.post(
+                                                retry.url(email.id),
+                                                {},
+                                                { preserveScroll: true },
+                                            )
                                         }
                                     >
                                         <RotateCcw />
@@ -2388,7 +2468,10 @@ export default function InboundEmails({ emails, filters }: Props) {
                         <Button
                             variant="outline"
                             disabled={!emails.prev_page_url}
-                            onClick={() => emails.prev_page_url && router.visit(emails.prev_page_url)}
+                            onClick={() =>
+                                emails.prev_page_url &&
+                                router.visit(emails.prev_page_url)
+                            }
                         >
                             Anterior
                         </Button>
@@ -2398,7 +2481,10 @@ export default function InboundEmails({ emails, filters }: Props) {
                         <Button
                             variant="outline"
                             disabled={!emails.next_page_url}
-                            onClick={() => emails.next_page_url && router.visit(emails.next_page_url)}
+                            onClick={() =>
+                                emails.next_page_url &&
+                                router.visit(emails.next_page_url)
+                            }
                         >
                             Siguiente
                         </Button>
@@ -2438,10 +2524,12 @@ git commit -m "feat: add inbound email history with retry"
 ### Task 10: Dashboard por cuenta
 
 **Files:**
+
 - Modify: `app/Http/Controllers/DashboardController.php`, `resources/js/pages/dashboard.tsx`
 - Test: `tests/Feature/DashboardTest.php` (agregar caso)
 
 **Interfaces:**
+
 - Consumes: `Transaction::account()` (Task 1).
 - Produces: prop `byAccount: {name: string, currency: Currency, income: number, expense: number}[]`, una fila por cuenta y moneda con movimientos este mes. La fila sin cuenta se llama "Sin cuenta".
 
@@ -2473,8 +2561,8 @@ Run: `php artisan test --filter=DashboardTest`
 Expected: FAIL (`byAccount` missing)
 
 - [ ] **Step 3: Implement** — en `DashboardController`:
-  - cambia la carga inicial a `Transaction::with(['category:id,name,type', 'account:id,name'])`
-  - después de `$budgets`, agrega:
+    - cambia la carga inicial a `Transaction::with(['category:id,name,type', 'account:id,name'])`
+    - después de `$budgets`, agrega:
 
 ```php
         // One row per account and currency: an account without movements this month is left out.
@@ -2494,7 +2582,7 @@ Expected: FAIL (`byAccount` missing)
             ->values();
 ```
 
-  - agrega `'byAccount' => $byAccount,` a las props de `Inertia::render`
+- agrega `'byAccount' => $byAccount,` a las props de `Inertia::render`
 
 - [ ] **Step 4: Run test to verify it passes**
 
@@ -2502,39 +2590,43 @@ Run: `php artisan test --filter=DashboardTest`
 Expected: PASS (todos)
 
 - [ ] **Step 5: UI** — en `dashboard.tsx`:
-  - agrega a `Props`: `byAccount: { name: string; currency: Currency; income: number; expense: number }[];`
-  - desestructúralo
-  - justo antes del bloque `{budgets.length > 0 && (`, agrega:
+    - agrega a `Props`: `byAccount: { name: string; currency: Currency; income: number; expense: number }[];`
+    - desestructúralo
+    - justo antes del bloque `{budgets.length > 0 && (`, agrega:
 
 ```tsx
-                {byAccount.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Por cuenta (este mes)</CardTitle>
-                        </CardHeader>
-                        <CardContent className="grid gap-3 md:grid-cols-2">
-                            {byAccount.map((row) => (
-                                <div
-                                    key={`${row.name}-${row.currency}`}
-                                    className="flex items-center justify-between gap-3 rounded-lg bg-accent/40 p-3"
-                                >
-                                    <span className="min-w-0 truncate font-semibold">{row.name}</span>
-                                    <span className="shrink-0 text-right text-sm tabular-nums">
-                                        <span className="block text-success">
-                                            +{formatMoney(row.income, row.currency)}
-                                        </span>
-                                        <span className="block text-muted-foreground">
-                                            −{formatMoney(row.expense, row.currency)}
-                                        </span>
-                                    </span>
-                                </div>
-                            ))}
-                        </CardContent>
-                    </Card>
-                )}
+{
+    byAccount.length > 0 && (
+        <Card>
+            <CardHeader>
+                <CardTitle>Por cuenta (este mes)</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2">
+                {byAccount.map((row) => (
+                    <div
+                        key={`${row.name}-${row.currency}`}
+                        className="flex items-center justify-between gap-3 rounded-lg bg-accent/40 p-3"
+                    >
+                        <span className="min-w-0 truncate font-semibold">
+                            {row.name}
+                        </span>
+                        <span className="shrink-0 text-right text-sm tabular-nums">
+                            <span className="block text-success">
+                                +{formatMoney(row.income, row.currency)}
+                            </span>
+                            <span className="block text-muted-foreground">
+                                −{formatMoney(row.expense, row.currency)}
+                            </span>
+                        </span>
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
+    );
+}
 ```
 
-  Importa `formatMoney` de `@/lib/utils` si no está ya importado. Confirma que acepta `number` (firma en `lib/utils.ts:16`); si solo acepta string, pasa `String(row.income)`.
+Importa `formatMoney` de `@/lib/utils` si no está ya importado. Confirma que acepta `number` (firma en `lib/utils.ts:16`); si solo acepta string, pasa `String(row.income)`.
 
 - [ ] **Step 6: Verify**
 
@@ -2553,10 +2645,12 @@ git commit -m "feat: show monthly income and expenses per account on the dashboa
 ### Task 11: Apps Script, documentación y despliegue
 
 **Files:**
+
 - Create: `docs/gmail-apps-script.js`
 - Modify: `README.md`
 
 **Interfaces:**
+
 - Consumes: `POST /api/inbound-emails` con `{emails: [{message_id, from, subject, date, body}]}` y `Authorization: Bearer` (Task 6).
 
 - [ ] **Step 1: Script** — `docs/gmail-apps-script.js`
@@ -2581,49 +2675,57 @@ const LABEL = 'Bancos';
 const BATCH = 100;
 
 function sendBankEmails() {
-  const props = PropertiesService.getScriptProperties();
-  const url = props.getProperty('APP_URL').replace(/\/$/, '') + '/api/inbound-emails';
-  const token = props.getProperty('TOKEN');
-  const lastSuccess = Number(props.getProperty('LAST_SUCCESS') || 0);
-  // One hour of overlap so an email that arrives during a run is never skipped.
-  const since = lastSuccess ? lastSuccess - 60 * 60 * 1000 : 0;
-  const startedAt = Date.now();
+    const props = PropertiesService.getScriptProperties();
+    const url =
+        props.getProperty('APP_URL').replace(/\/$/, '') + '/api/inbound-emails';
+    const token = props.getProperty('TOKEN');
+    const lastSuccess = Number(props.getProperty('LAST_SUCCESS') || 0);
+    // One hour of overlap so an email that arrives during a run is never skipped.
+    const since = lastSuccess ? lastSuccess - 60 * 60 * 1000 : 0;
+    const startedAt = Date.now();
 
-  const emails = [];
-  GmailApp.search('label:' + LABEL + ' newer_than:3d').forEach(function (thread) {
-    // Gmail groups notifications with the same subject into one thread: read every message.
-    thread.getMessages().forEach(function (message) {
-      if (message.getDate().getTime() < since) return;
-      emails.push({
-        message_id: message.getId(),
-        from: message.getFrom(),
-        subject: message.getSubject(),
-        date: message.getDate().toISOString(),
-        body: message.getPlainBody().slice(0, 100000),
-      });
-    });
-  });
+    const emails = [];
+    GmailApp.search('label:' + LABEL + ' newer_than:3d').forEach(
+        function (thread) {
+            // Gmail groups notifications with the same subject into one thread: read every message.
+            thread.getMessages().forEach(function (message) {
+                if (message.getDate().getTime() < since) return;
+                emails.push({
+                    message_id: message.getId(),
+                    from: message.getFrom(),
+                    subject: message.getSubject(),
+                    date: message.getDate().toISOString(),
+                    body: message.getPlainBody().slice(0, 100000),
+                });
+            });
+        },
+    );
 
-  for (let i = 0; i < emails.length; i += BATCH) {
-    const response = UrlFetchApp.fetch(url, {
-      method: 'post',
-      contentType: 'application/json',
-      headers: { Authorization: 'Bearer ' + token },
-      payload: JSON.stringify({ emails: emails.slice(i, i + BATCH) }),
-      muteHttpExceptions: true,
-    });
-    if (response.getResponseCode() >= 300) {
-      throw new Error('SR Gastos responded ' + response.getResponseCode() + ': ' + response.getContentText().slice(0, 500));
+    for (let i = 0; i < emails.length; i += BATCH) {
+        const response = UrlFetchApp.fetch(url, {
+            method: 'post',
+            contentType: 'application/json',
+            headers: { Authorization: 'Bearer ' + token },
+            payload: JSON.stringify({ emails: emails.slice(i, i + BATCH) }),
+            muteHttpExceptions: true,
+        });
+        if (response.getResponseCode() >= 300) {
+            throw new Error(
+                'SR Gastos responded ' +
+                    response.getResponseCode() +
+                    ': ' +
+                    response.getContentText().slice(0, 500),
+            );
+        }
     }
-  }
 
-  props.setProperty('LAST_SUCCESS', String(startedAt));
+    props.setProperty('LAST_SUCCESS', String(startedAt));
 }
 ```
 
 - [ ] **Step 2: README** — agrega a `README.md`:
-  - en "Features", la viñeta: `- **Bank emails**: a Gmail Apps Script forwards bank notifications every hour; an hourly job classifies each one with AI (expense, income, internal transfer or noise), picks the account and category, and records it. Unsure results are flagged "Por revisar"; the "Correos" page shows every email and lets you retry failures.` y otra `- **Accounts**: bank accounts, wallets and credit cards, each with its currency; movements can belong to one.`
-  - una sección nueva antes de "Quality checks":
+    - en "Features", la viñeta: `- **Bank emails**: a Gmail Apps Script forwards bank notifications every hour; an hourly job classifies each one with AI (expense, income, internal transfer or noise), picks the account and category, and records it. Unsure results are flagged "Por revisar"; the "Correos" page shows every email and lets you retry failures.` y otra `- **Accounts**: bank accounts, wallets and credit cards, each with its currency; movements can belong to one.`
+    - una sección nueva antes de "Quality checks":
 
 ````markdown
 ## Bank email ingestion
@@ -2631,9 +2733,9 @@ function sendBankEmails() {
 1. In `.env`: `INBOUND_EMAIL_TOKEN` (a long random string, e.g. `php -r "echo bin2hex(random_bytes(32));"`), `OWNER_EMAIL`, `AI_PROVIDER=anthropic`, `AI_MODEL`, `AI_EFFORT`, `ANTHROPIC_API_KEY`.
 2. Run the scheduler every minute (on Hostinger: hPanel → Advanced → Cron Jobs):
 
-   ```
-   * * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
-   ```
+    ```
+    * * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+    ```
 
 3. Install `docs/gmail-apps-script.js` in the owner's Google account (instructions at the top of the file).
 4. Create your accounts in **Cuentas** (add the last 4 digits so the AI can match them).
@@ -2660,8 +2762,8 @@ Run: `composer ci:check && ./vendor/bin/phpstan analyse && npm run build`
 Expected: todo en verde. Si algo falla, corrígelo en el commit de la tarea que lo introdujo (`git commit --fixup`) o en un commit `fix:` aparte.
 
 - [ ] **Step 2: Fixtures reales** — cuando el dueño comparta los correos de ejemplo:
-  - guárdalos anonimizados (sin nombres de terceros; los últimos 4 dígitos se pueden quedar) como `tests/Fixtures/emails/<banco>-<caso>.txt`
-  - formato: primera línea `From: ...`, segunda `Subject: ...`, línea en blanco y el cuerpo
+    - guárdalos anonimizados (sin nombres de terceros; los últimos 4 dígitos se pueden quedar) como `tests/Fixtures/emails/<banco>-<caso>.txt`
+    - formato: primera línea `From: ...`, segunda `Subject: ...`, línea en blanco y el cuerpo
 
 - [ ] **Step 3: Prueba manual con la API real** (requiere `ANTHROPIC_API_KEY` en `.env` local y cuentas y categorías creadas):
 
@@ -2692,10 +2794,10 @@ curl -s -X POST http://localhost:8000/api/inbound-emails \
 Expected: `{"received":1,"new":1}`; repetido: `{"received":1,"new":0}`.
 
 - [ ] **Step 5: PR** — abre el PR con:
-  - resumen
-  - las 3 migraciones nuevas
-  - las variables de `.env` nuevas
-  - el cron requerido
-  - capturas de Cuentas, Movimientos con insignias, Correos y Dashboard
+    - resumen
+    - las 3 migraciones nuevas
+    - las variables de `.env` nuevas
+    - el cron requerido
+    - capturas de Cuentas, Movimientos con insignias, Correos y Dashboard
 
-  Termina la descripción con `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.
+    Termina la descripción con `🤖 Generated with [Claude Code](https://claude.com/claude-code)`.

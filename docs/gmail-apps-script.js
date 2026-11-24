@@ -16,6 +16,7 @@
 const LABEL = 'Bancos';
 const BATCH = 100;
 
+// eslint-disable-next-line no-unused-vars -- Apps Script trigger entry point
 function sendBankEmails() {
     const props = PropertiesService.getScriptProperties();
     const url =
