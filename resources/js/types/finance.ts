@@ -20,6 +20,10 @@ export type Transaction = {
     category_id: number;
     category: Pick<Category, 'id' | 'name' | 'type'>;
     user: { id: number; name: string } | null;
+    account_id: number | null;
+    account: { id: number; name: string } | null;
+    needs_review: boolean;
+    inbound_email_id: number | null;
 };
 
 export type Paginated<T> = {

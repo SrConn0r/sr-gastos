@@ -24,6 +24,7 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { CURRENCIES, formatMoney } from '@/lib/utils';
 import { store, update } from '@/routes/transactions';
 import type {
+    Account,
     Category,
     CategoryType,
     Currency,
@@ -33,6 +34,7 @@ import type {
 
 type Props = {
     categories: Pick<Category, 'id' | 'name' | 'type'>[];
+    accounts?: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[];
     transaction?: Transaction;
     /** Prefills a new expense, e.g. the payment of a fixed bill or subscription. */
     payment?: RecurringExpense;
@@ -43,6 +45,7 @@ type Props = {
 
 export function TransactionDialog({
     categories,
+    accounts,
     transaction,
     payment,
     trigger,
@@ -65,6 +68,7 @@ export function TransactionDialog({
                 </DialogHeader>
                 <TransactionForm
                     categories={categories}
+                    accounts={accounts}
                     transaction={transaction}
                     payment={payment}
                     onSuccess={() => setOpen(false)}
@@ -77,6 +81,7 @@ export function TransactionDialog({
 
 function TransactionForm({
     categories,
+    accounts,
     transaction,
     payment,
     onSuccess,
@@ -89,6 +94,13 @@ function TransactionForm({
     );
     const [currency, setCurrency] = useState<Currency>(
         transaction?.currency ?? payment?.currency ?? 'COP',
+    );
+    const [accountId, setAccountId] = useState(
+        transaction?.account_id ? String(transaction.account_id) : 'none',
+    );
+    const selectableAccounts = (accounts ?? []).filter(
+        (account) =>
+            !account.archived_at || account.id === transaction?.account_id,
     );
     const categoryId = transaction?.category_id ?? payment?.category_id;
     const today = new Date().toLocaleDateString('en-CA');
@@ -173,6 +185,48 @@ function TransactionForm({
                         </Select>
                         <InputError message={errors.category_id} />
                     </div>
+
+                    {accounts && (
+                        <div className="grid gap-2">
+                            <Label htmlFor="account">Cuenta</Label>
+                            <input
+                                type="hidden"
+                                name="account_id"
+                                value={accountId === 'none' ? '' : accountId}
+                            />
+                            <Select
+                                value={accountId}
+                                onValueChange={(value) => {
+                                    setAccountId(value);
+                                    const account = accounts.find(
+                                        (a) => String(a.id) === value,
+                                    );
+
+                                    if (account) {
+                                        setCurrency(account.currency);
+                                    }
+                                }}
+                            >
+                                <SelectTrigger id="account" className="w-full">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">
+                                        Sin cuenta
+                                    </SelectItem>
+                                    {selectableAccounts.map((account) => (
+                                        <SelectItem
+                                            key={account.id}
+                                            value={String(account.id)}
+                                        >
+                                            {account.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.account_id} />
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-[1fr_7rem] gap-2">
                         <div className="grid gap-2">

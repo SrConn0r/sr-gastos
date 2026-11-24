@@ -12,6 +12,7 @@ import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { ListLabel, ListRow } from '@/components/list-row';
 import { TransactionDialog } from '@/components/transaction-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,11 +24,18 @@ import {
 } from '@/components/ui/select';
 import { CURRENCIES, cn, formatDate, formatMoney } from '@/lib/utils';
 import { destroy, index } from '@/routes/transactions';
-import type { Category, Paginated, Transaction } from '@/types';
+import type { Account, Category, Paginated, Transaction } from '@/types';
 
 type Filters = Partial<
     Record<
-        'search' | 'type' | 'category' | 'currency' | 'date_from' | 'date_to',
+        | 'search'
+        | 'type'
+        | 'category'
+        | 'currency'
+        | 'account'
+        | 'review'
+        | 'date_from'
+        | 'date_to',
         string
     >
 >;
@@ -35,6 +43,7 @@ type Filters = Partial<
 type Props = {
     transactions: Paginated<Transaction>;
     categories: Pick<Category, 'id' | 'name' | 'type'>[];
+    accounts: Pick<Account, 'id' | 'name' | 'currency' | 'archived_at'>[];
     filters: Filters;
 };
 
@@ -66,6 +75,7 @@ function dayLabel(date: string) {
 export default function Transactions({
     transactions,
     categories,
+    accounts,
     filters,
 }: Props) {
     const [showFilters, setShowFilters] = useState(
@@ -86,6 +96,7 @@ export default function Transactions({
                     />
                     <TransactionDialog
                         categories={categories}
+                        accounts={accounts}
                         trigger={
                             <Button>
                                 <Plus /> Nuevo
@@ -197,6 +208,49 @@ export default function Transactions({
                                         ))}
                                     </SelectContent>
                                 </Select>
+                                <Select
+                                    name="account"
+                                    defaultValue={filters.account ?? 'all'}
+                                >
+                                    <SelectTrigger
+                                        className="w-full"
+                                        aria-label="Cuenta"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Todas las cuentas
+                                        </SelectItem>
+                                        {accounts.map((account) => (
+                                            <SelectItem
+                                                key={account.id}
+                                                value={String(account.id)}
+                                            >
+                                                {account.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select
+                                    name="review"
+                                    defaultValue={filters.review ?? 'all'}
+                                >
+                                    <SelectTrigger
+                                        className="w-full"
+                                        aria-label="Revisión"
+                                    >
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">
+                                            Todos
+                                        </SelectItem>
+                                        <SelectItem value="1">
+                                            Por revisar
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
                                 <Input
                                     type="date"
                                     name="date_from"
@@ -238,6 +292,7 @@ export default function Transactions({
                                     <TransactionDialog
                                         key={transaction.id}
                                         categories={categories}
+                                        accounts={accounts}
                                         transaction={transaction}
                                         footer={
                                             <ConfirmDelete
@@ -264,9 +319,26 @@ export default function Transactions({
                                                         <ArrowUpRight />
                                                     )
                                                 }
-                                                title={transaction.title}
+                                                title={
+                                                    <span className="flex items-center gap-1.5">
+                                                        <span className="truncate">
+                                                            {transaction.title}
+                                                        </span>
+                                                        {transaction.inbound_email_id && (
+                                                            <Badge variant="secondary">
+                                                                Auto
+                                                            </Badge>
+                                                        )}
+                                                        {transaction.needs_review && (
+                                                            <Badge variant="destructive">
+                                                                Por revisar
+                                                            </Badge>
+                                                        )}
+                                                    </span>
+                                                }
                                                 subtitle={[
                                                     transaction.category.name,
+                                                    transaction.account?.name,
                                                     transaction.user?.name,
                                                 ]
                                                     .filter(Boolean)
