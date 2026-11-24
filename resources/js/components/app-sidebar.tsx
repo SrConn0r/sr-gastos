@@ -5,6 +5,7 @@ import {
     House,
     Landmark,
     LayoutGrid,
+    Mail,
     Tags,
 } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
@@ -23,6 +24,7 @@ import { dashboard } from '@/routes';
 import { index as accounts } from '@/routes/accounts';
 import { index as categories } from '@/routes/categories';
 import { index as fixedExpenses } from '@/routes/fixed-expenses';
+import { index as inboundEmails } from '@/routes/inbound-emails';
 import { index as subscriptions } from '@/routes/subscriptions';
 import { index as transactions } from '@/routes/transactions';
 import type { NavItem } from '@/types';
@@ -34,6 +36,7 @@ export const mainNavItems: NavItem[] = [
     { title: 'Suscripciones', href: subscriptions(), icon: CalendarClock },
     { title: 'Categorías', href: categories(), icon: Tags },
     { title: 'Cuentas', href: accounts(), icon: Landmark },
+    { title: 'Correos', href: inboundEmails(), icon: Mail },
 ];
 
 export function AppSidebar() {

@@ -64,3 +64,25 @@ export type Account = {
     archived_at: string | null;
     transactions_count?: number;
 };
+
+export type InboundEmailStatus =
+    | 'pending'
+    | 'recorded'
+    | 'internal_transfer'
+    | 'ignored'
+    | 'failed';
+
+export type InboundEmail = {
+    id: number;
+    from: string;
+    subject: string;
+    received_at: string;
+    status: InboundEmailStatus;
+    attempts: number;
+    error: string | null;
+    ai_result: { reason?: string } | null;
+    transaction: Pick<
+        Transaction,
+        'id' | 'title' | 'amount' | 'currency'
+    > | null;
+};
