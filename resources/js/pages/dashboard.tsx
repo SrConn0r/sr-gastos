@@ -52,6 +52,12 @@ type Props = {
         currency: Currency;
         spent: number;
     }[];
+    byAccount: {
+        name: string;
+        currency: Currency;
+        income: number;
+        expense: number;
+    }[];
     expensesByCategory: { category: string; total: number }[];
     monthly: { month: string; income: number; expense: number }[];
     pending: (RecurringExpense & { due_date: string; overdue: boolean })[];
@@ -70,6 +76,7 @@ export default function Dashboard({
     currency,
     totals,
     budgets,
+    byAccount,
     expensesByCategory,
     monthly,
     pending,
@@ -350,6 +357,42 @@ export default function Dashboard({
                         </CardContent>
                     </Card>
                 </div>
+
+                {byAccount.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Por cuenta (este mes)</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-3 md:grid-cols-2">
+                            {byAccount.map((row) => (
+                                <div
+                                    key={`${row.name}-${row.currency}`}
+                                    className="flex items-center justify-between gap-3 rounded-lg bg-accent/40 p-3"
+                                >
+                                    <span className="min-w-0 truncate font-semibold">
+                                        {row.name}
+                                    </span>
+                                    <span className="shrink-0 text-right text-sm tabular-nums">
+                                        <span className="block text-success">
+                                            +
+                                            {formatMoney(
+                                                row.income,
+                                                row.currency,
+                                            )}
+                                        </span>
+                                        <span className="block text-muted-foreground">
+                                            −
+                                            {formatMoney(
+                                                row.expense,
+                                                row.currency,
+                                            )}
+                                        </span>
+                                    </span>
+                                </div>
+                            ))}
+                        </CardContent>
+                    </Card>
+                )}
 
                 {budgets.length > 0 && (
                     <Card>

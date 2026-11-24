@@ -22,7 +22,7 @@ class DashboardController extends Controller
         $firstMonth = $thisMonth->copy()->subMonths(11);
 
         // ponytail: aggregates a year of rows in PHP; move to SQL GROUP BY if volume grows past a household.
-        $transactions = Transaction::with('category:id,name,type')
+        $transactions = Transaction::with(['category:id,name,type', 'account:id,name'])
             ->whereBetween('date', [$firstMonth->toDateString(), $thisMonth->copy()->endOfMonth()->toDateString()])
             ->get();
 
@@ -63,6 +63,22 @@ class DashboardController extends Controller
                     ->sum('amount'),
             ]);
 
+        // One row per account and currency: an account without movements this month is left out.
+        $byAccount = $month
+            ->groupBy(fn (Transaction $t) => ($t->account->name ?? 'Sin cuenta').'|'.$t->currency->value)
+            ->map(function (Collection $items, string $key) use ($sum) {
+                [$name, $code] = explode('|', $key);
+
+                return [
+                    'name' => $name,
+                    'currency' => $code,
+                    'income' => $sum($items, CategoryType::Income),
+                    'expense' => $sum($items, CategoryType::Expense),
+                ];
+            })
+            ->sortBy(fn (array $row) => [$row['name'] === 'Sin cuenta', $row['name'], $row['currency']])
+            ->values();
+
         $inCurrency = $transactions->where('currency', $currency);
 
         $expensesByCategory = $inCurrency
@@ -101,6 +117,7 @@ class DashboardController extends Controller
             'currency' => $currency->value,
             'totals' => $totals,
             'budgets' => $budgets,
+            'byAccount' => $byAccount,
             'expensesByCategory' => $expensesByCategory,
             'monthly' => $monthly,
             'pending' => $pending,

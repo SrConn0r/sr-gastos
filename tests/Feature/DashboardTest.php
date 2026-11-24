@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Account;
 use App\Models\Category;
 use App\Models\Transaction;
 use App\Models\User;
@@ -49,4 +50,22 @@ it('draws the charts in the selected currency', function () {
             ->where('currency', 'USD')
             ->where('expensesByCategory', [['category' => 'Food', 'total' => 20]])
         );
+});
+
+it('summarizes this month per account', function () {
+    $bbva = Account::factory()->create(['name' => 'BBVA']);
+    $food = Category::factory()->create();
+    $salary = Category::factory()->income()->create();
+
+    Transaction::factory()->for($salary)->create(['account_id' => $bbva->id, 'amount' => 500, 'currency' => 'COP', 'date' => '2026-11-02']);
+    Transaction::factory()->for($food)->create(['account_id' => $bbva->id, 'amount' => 80, 'currency' => 'COP', 'date' => '2026-11-03']);
+    Transaction::factory()->for($food)->create(['amount' => 20, 'currency' => 'USD', 'date' => '2026-11-04']);
+    Transaction::factory()->for($food)->create(['account_id' => $bbva->id, 'amount' => 999, 'currency' => 'COP', 'date' => '2026-10-30']);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('dashboard'))
+        ->assertInertia(fn (Assert $page) => $page->where('byAccount', [
+            ['name' => 'BBVA', 'currency' => 'COP', 'income' => 500, 'expense' => 80],
+            ['name' => 'Sin cuenta', 'currency' => 'USD', 'income' => 0, 'expense' => 20],
+        ]));
 });
