@@ -10,6 +10,8 @@ SR Gastos is a private household ledger built with Laravel 13, Inertia and React
 - **Subscriptions**: monthly or yearly charges with a billing day, which can be switched off.
 - **Payments**: "Registrar pago" creates the movement prefilled from the fixed expense or subscription, so each one shows as paid, pending, overdue or scheduled this month.
 - **Dashboard**: monthly income, expenses and balance per currency, bills and subscriptions still due this month, budget progress, expenses by category and a 12-month income vs expenses chart.
+- **Bank emails**: a Gmail Apps Script forwards bank notifications every hour; an hourly job classifies each one with AI (expense, income, internal transfer or noise), picks the account and category, and records it. Unsure results are flagged "Por revisar"; the "Correos" page shows every email and lets you retry failures.
+- **Accounts**: bank accounts, wallets and credit cards, each with its currency; movements can belong to one.
 - **Auth**: Fortify login, password reset, email verification, two-factor and passkeys. Public registration is disabled.
 
 ## Local setup
@@ -25,6 +27,22 @@ composer dev
 ```
 
 `compose.yaml` runs MySQL 8.4 on `localhost:3306` with the `DB_*` / `MYSQL_APP_*` values from `.env`. Create real household users with `php artisan tinker`.
+
+## Bank email ingestion
+
+1. In `.env`: `INBOUND_EMAIL_TOKEN` (a long random string, e.g. `php -r "echo bin2hex(random_bytes(32));"`), `OWNER_EMAIL`, `AI_PROVIDER=anthropic`, `AI_MODEL`, `AI_EFFORT`, `ANTHROPIC_API_KEY`.
+2. Run the scheduler every minute (on Hostinger: hPanel → Advanced → Cron Jobs):
+
+    ```
+    * * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+    ```
+
+3. Install `docs/gmail-apps-script.js` in the owner's Google account (instructions at the top of the file).
+4. Create your accounts in **Cuentas** (add the last 4 digits so the AI can match them).
+
+Run `php artisan inbound-emails:process` to process pending emails now.
+
+The AI layer lives in `app/Ai`: tasks depend on the `AiProvider` interface only. To add a provider, implement `AiProvider`, add a case to the binding in `AppServiceProvider`, and its credentials to `config/ai.php`.
 
 ## Quality checks
 
