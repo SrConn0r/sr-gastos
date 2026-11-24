@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'inbound_email' => [
+        'token' => env('INBOUND_EMAIL_TOKEN'),
+    ],
+
 ];

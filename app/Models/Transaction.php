@@ -16,6 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $account_id
  * @property int|null $user_id
  * @property int|null $recurring_expense_id
+ * @property int|null $inbound_email_id
  * @property string $title
  * @property string $amount
  * @property Currency $currency
@@ -27,8 +28,9 @@ use Illuminate\Support\Carbon;
  * @property-read Account|null $account
  * @property-read User|null $user
  * @property-read RecurringExpense|null $recurringExpense
+ * @property-read InboundEmail|null $inboundEmail
  */
-#[Fillable(['title', 'amount', 'currency', 'date', 'needs_review', 'category_id', 'account_id', 'user_id', 'recurring_expense_id'])]
+#[Fillable(['title', 'amount', 'currency', 'date', 'needs_review', 'category_id', 'account_id', 'user_id', 'recurring_expense_id', 'inbound_email_id'])]
 class Transaction extends Model
 {
     /** @use HasFactory<TransactionFactory> */
@@ -67,5 +69,11 @@ class Transaction extends Model
     public function recurringExpense(): BelongsTo
     {
         return $this->belongsTo(RecurringExpense::class);
+    }
+
+    /** @return BelongsTo<InboundEmail, $this> */
+    public function inboundEmail(): BelongsTo
+    {
+        return $this->belongsTo(InboundEmail::class);
     }
 }
