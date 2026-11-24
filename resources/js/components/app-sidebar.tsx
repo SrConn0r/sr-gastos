@@ -3,6 +3,7 @@ import {
     ArrowLeftRight,
     CalendarClock,
     House,
+    Landmark,
     LayoutGrid,
     Tags,
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as accounts } from '@/routes/accounts';
 import { index as categories } from '@/routes/categories';
 import { index as fixedExpenses } from '@/routes/fixed-expenses';
 import { index as subscriptions } from '@/routes/subscriptions';
@@ -31,6 +33,7 @@ export const mainNavItems: NavItem[] = [
     { title: 'Gastos fijos', href: fixedExpenses(), icon: House },
     { title: 'Suscripciones', href: subscriptions(), icon: CalendarClock },
     { title: 'Categorías', href: categories(), icon: Tags },
+    { title: 'Cuentas', href: accounts(), icon: Landmark },
 ];
 
 export function AppSidebar() {

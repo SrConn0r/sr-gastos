@@ -47,3 +47,16 @@ export type RecurringExpense = {
     active: boolean;
     last_paid_on: string | null;
 };
+
+export type AccountKind = 'deposit' | 'credit_card';
+
+export type Account = {
+    id: number;
+    name: string;
+    institution: string;
+    kind: AccountKind;
+    currency: Currency;
+    last4: string | null;
+    archived_at: string | null;
+    transactions_count?: number;
+};

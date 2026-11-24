@@ -4,6 +4,7 @@ use App\Enums\AccountKind;
 use App\Models\Account;
 use App\Models\Transaction;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(fn () => $this->actingAs(User::factory()->create()));
 
@@ -53,4 +54,12 @@ it('only deletes accounts without movements', function () {
     $this->delete(route('accounts.destroy', $empty));
 
     expect(Account::pluck('id')->all())->toBe([$used->id]);
+});
+
+it('renders the accounts page', function () {
+    Account::factory()->create();
+
+    $this->get(route('accounts.index'))->assertInertia(fn (Assert $page) => $page
+        ->component('accounts/index')
+        ->has('accounts', 1));
 });
