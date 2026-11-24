@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\InboundEmailStatus;
+use Carbon\CarbonInterface;
 use Database\Factories\InboundEmailFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
@@ -24,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $attempts
  * @property array<string, mixed>|null $ai_result
  * @property string|null $error
- * @property Carbon|null $processed_at
+ * @property CarbonInterface|null $processed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
