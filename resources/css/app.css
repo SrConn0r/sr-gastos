@@ -166,6 +166,19 @@
         overscroll-behavior-y: none;
     }
 
+    /* iOS Safari gives native date pickers an intrinsic width/height that
+       ignores `w-full`, overflowing narrow layouts. */
+    input[type='date'],
+    input[type='month'],
+    input[type='time'],
+    input[type='datetime-local'] {
+        appearance: none;
+    }
+
+    ::-webkit-date-and-time-value {
+        text-align: start;
+    }
+
     body {
         @apply bg-background text-foreground;
         background-image: radial-gradient(
