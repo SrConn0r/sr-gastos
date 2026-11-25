@@ -1,20 +1,17 @@
 import { usePage } from '@inertiajs/react';
 
+import AppLogoFull from '@/components/app-logo-full';
 import AppLogoIcon from '@/components/app-logo-icon';
 
 export default function AppLogo() {
     const { name } = usePage().props;
 
     return (
-        <>
-            <div className="flex aspect-square size-8 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
-                <AppLogoIcon className="size-5 fill-current" />
-            </div>
-            <div className="ml-1 grid flex-1 text-left text-sm">
-                <span className="mb-0.5 truncate leading-tight font-bold">
-                    {name}
-                </span>
-            </div>
-        </>
+        // Wrapped: SidebarMenuButton forces direct svg children to size-4.
+        <span className="flex items-center">
+            <AppLogoIcon className="hidden size-8 shrink-0 group-data-[collapsible=icon]:block" />
+            <AppLogoFull className="h-8 w-auto group-data-[collapsible=icon]:hidden" />
+            <span className="sr-only">{name}</span>
+        </span>
     );
 }

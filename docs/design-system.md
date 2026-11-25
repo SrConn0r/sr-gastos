@@ -4,6 +4,15 @@ Mobile-first, app-like UI on top of the shadcn/ui primitives already in
 `resources/js/components/ui`. Tokens live in `resources/css/app.css`; never
 hardcode hex/`neutral-*` colors in pages, use the tokens below.
 
+## Logo
+
+- `AppLogoIcon` (isotype) and `AppLogoFull` (with "Sr. Gastos" wordmark) are
+  traced vector SVGs. Colors come from `--logo-ink` (navy `#00287a`, light
+  foreground in dark mode) and `--logo-mark` (`brand-400`); override them on a
+  parent to recolor, e.g. `[--logo-ink:white]`.
+- Static copies with fixed colors: `public/logo.svg`, `public/logo-full.svg`;
+  `public/favicon.svg` switches the ring to light in dark mode.
+
 ## Typography
 
 - **Plus Jakarta Sans** 400/500/600/700 (loaded via `bunny()` in `vite.config.ts`).

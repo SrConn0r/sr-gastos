@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import AppLogoIcon from '@/components/app-logo-icon';
+import AppLogoFull from '@/components/app-logo-full';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { UserInfo } from '@/components/user-info';
@@ -17,14 +17,8 @@ export function AppSidebarHeader({
     return (
         <header className="sticky top-0 z-30 flex shrink-0 items-center gap-2 bg-background/70 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-xl md:static md:h-14 md:bg-transparent md:backdrop-blur-none">
             <div className="flex h-14 flex-1 items-center gap-2 md:hidden">
-                <Link
-                    href={dashboard()}
-                    className="flex items-center gap-2 font-bold"
-                >
-                    <span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground">
-                        <AppLogoIcon className="size-5 fill-current" />
-                    </span>
-                    {name}
+                <Link href={dashboard()} aria-label={name}>
+                    <AppLogoFull className="h-9 w-auto" />
                 </Link>
                 {auth.user && (
                     <Link

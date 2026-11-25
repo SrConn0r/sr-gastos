@@ -61,6 +61,9 @@
 
     --color-success: var(--success);
 
+    --color-logo-ink: var(--logo-ink);
+    --color-logo-mark: var(--logo-mark);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -102,6 +105,8 @@
     --destructive: oklch(0.58 0.2 25);
     --destructive-foreground: oklch(0.55 0.2 25);
     --success: oklch(0.52 0.12 162);
+    --logo-ink: #00287a;
+    --logo-mark: var(--color-brand-400);
     --border: oklch(0.92 0.01 165);
     --input: oklch(0.955 0.01 165);
     --ring: var(--color-brand-500);
@@ -136,6 +141,7 @@
     --destructive: oklch(0.65 0.2 25);
     --destructive-foreground: oklch(0.72 0.17 25);
     --success: var(--color-brand-400);
+    --logo-ink: var(--foreground);
     --border: oklch(0.28 0.015 165);
     --input: oklch(0.25 0.015 165);
     --ring: var(--color-brand-400);
