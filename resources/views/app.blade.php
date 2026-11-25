@@ -6,6 +6,7 @@
         <meta name="theme-color" content="#f3f8f5" media="(prefers-color-scheme: light)">
         <meta name="theme-color" content="#0d1512" media="(prefers-color-scheme: dark)">
         <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
@@ -23,6 +24,12 @@
             })();
         </script>
 
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js'));
+            }
+        </script>
+
         {{-- Inline style to set the HTML background color based on our theme in app.css --}}
         <style>
             html {
@@ -37,6 +44,7 @@
         <link rel="icon" href="/favicon.ico" sizes="any">
         <link rel="icon" href="/favicon.svg" type="image/svg+xml">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+        <link rel="manifest" href="/manifest.webmanifest">
 
         @fonts
 
