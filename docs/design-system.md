@@ -77,3 +77,8 @@ Prefer the semantic tokens:
   `env(safe-area-inset-*)` (`viewport-fit=cover`).
 - `md+`: floating collapsible sidebar + breadcrumbs.
 - Nav items are defined once in `mainNavItems` (`components/app-sidebar.tsx`).
+- Pull-to-refresh (`components/pull-to-refresh.tsx`) wraps every app page except
+  `settings/*`: pulling down from the top reloads the Inertia props and shows a
+  skeleton from `components/page-skeletons.tsx` (`DashboardSkeleton` for
+  `dashboard`, `ListSkeleton` otherwise). Native overscroll is disabled on
+  `html` so the browser's own refresh doesn't fire.

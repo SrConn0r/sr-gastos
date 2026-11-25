@@ -161,6 +161,11 @@
         @apply border-border outline-ring/50;
     }
 
+    html {
+        /* The app handles pull-to-refresh itself (components/pull-to-refresh). */
+        overscroll-behavior-y: none;
+    }
+
     body {
         @apply bg-background text-foreground;
         background-image: radial-gradient(
